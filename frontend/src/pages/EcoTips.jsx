@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
-import { Bell, Leaf, Zap, Car, Utensils, Trash2 } from 'lucide-react';
+import { Bell, Leaf, Zap, Car, Utensils, Trash2, Activity, TrendingUp } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 const STATIC_TIPS = [
     { icon: Car,      color: '#3B82F6', title: 'Opt for Green Transport',      body: 'Cycling or walking for trips under 5km eliminates transport emissions entirely.' },
@@ -13,10 +14,10 @@ const STATIC_TIPS = [
 ];
 
 const EcoTips = () => {
-    const { token }   = useAuth();
-    const [aiTips,    setAiTips]   = useState([]);
-    const [dashData,  setDashData] = useState(null);
-    const [loading,   setLoading]  = useState(true);
+    const { token } = useAuth();
+    const [aiTips, setAiTips] = useState([]);
+    const [dashData, setDashData] = useState(null);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         axios.get('http://localhost:5000/api/emissions/dashboard', {
@@ -29,68 +30,84 @@ const EcoTips = () => {
 
     const prediction = dashData?.stats?.prediction;
     const co2 = dashData?.latest?.footprint ?? 0;
-    const trend = typeof prediction === 'number' ? `${prediction.toFixed(1)} KG CO₂` : prediction;
+    const trend = typeof prediction === 'number' ? `${prediction.toFixed(1)} KG` : prediction;
 
     return (
-        <div style={{ paddingBottom: '3rem', display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-            <div>
-                <h2 className="neo-heading" style={{ fontSize: '1.8rem' }}>Eco Tips</h2>
-                <p className="neo-label mt-1">AI-powered recommendations based on your emissions data</p>
+        <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="flex flex-col gap-10 pb-12"
+        >
+            <div className="space-y-1">
+                <h2 className="text-2xl font-inter font-black tracking-tight text-text-light dark:text-text-dark uppercase italic">Eco Intelligence</h2>
+                <p className="text-[10px] font-medium opacity-50 uppercase tracking-widest">Personalized suggestions to help you reduce your environmental weight</p>
             </div>
 
-            {/* Two horizontal panels */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+            {/* Performance Prognosis Panels */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Temporal Prognosis */}
-                <div className="neo-card" style={{ padding: '1.5rem', borderLeft: '3px solid var(--accent)', position: 'relative', overflow: 'hidden' }}>
-                    <div style={{ position: 'absolute', right: 12, bottom: -12, fontFamily: 'Orbitron, monospace', fontWeight: 900, fontSize: 90, color: 'var(--accent)', opacity: 0.05, lineHeight: 1 }}>↑</div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
-                        <div style={{ width: 28, height: 28, borderRadius: '0.5rem', background: 'rgba(0,255,136,0.1)', border: '1px solid rgba(0,255,136,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <span style={{ color: 'var(--accent)', fontSize: '0.8rem' }}>↗</span>
+                <div className="neo-card p-8 group relative overflow-hidden shadow-lg border-primary-light/10">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-primary-light/5 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-primary-light/10 transition-colors" />
+                    <div className="flex items-center gap-3 mb-6">
+                        <div className="w-10 h-10 rounded-xl bg-primary-light/10 border border-primary-light/20 flex items-center justify-center text-primary-light transition-transform group-hover:rotate-6">
+                            <TrendingUp size={18} />
                         </div>
-                        <span className="neo-label">Temporal Prognosis</span>
+                        <span className="text-[10px] font-black uppercase tracking-[0.3em] opacity-40">30-Day Forecast</span>
                     </div>
                     {loading ? (
-                        <p className="neo-label">Loading...</p>
+                        <div className="flex items-center gap-3">
+                            <Activity size={20} className="animate-spin text-primary-light opacity-50" />
+                            <p className="text-xs font-bold opacity-30 italic">Calculating forecast...</p>
+                        </div>
                     ) : (
-                        <>
-                            <div style={{ fontFamily: 'Orbitron, monospace', fontWeight: 900, fontSize: '1.8rem', color: 'var(--text)', lineHeight: 1.2, marginBottom: '0.75rem' }}>
-                                {prediction ? `${trend}` : 'Insufficient data for prediction. Keep logging daily!'}
+                        <div className="space-y-4">
+                            <div className="font-inter font-black text-4xl text-text-light dark:text-text-dark tracking-tighter leading-none">
+                                {prediction ? `${trend}` : 'Pending Baseline'}
                             </div>
-                            {typeof prediction === 'number' && (
-                                <span className="neo-label">Predicted next 30-day footprint</span>
-                            )}
-                            <p className="neo-label" style={{ marginTop: '0.5rem', color: 'var(--text-muted)' }}>CONFIDENCE: 98.4% PRECISION</p>
-                        </>
+                            <div className="flex flex-col gap-1">
+                                <span className="text-[10px] font-black uppercase tracking-widest text-primary-light">Predicted 30-Day Magnitude</span>
+                                <p className="text-[9px] font-bold opacity-30 italic leading-none">Intelligence based on historical patterns</p>
+                            </div>
+                        </div>
                     )}
                 </div>
 
                 {/* Biosphere Equilibrium */}
-                <div className="neo-card" style={{ padding: '1.5rem', borderLeft: '3px solid #3B82F6' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
-                        <div style={{ width: 28, height: 28, borderRadius: '0.5rem', background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <Bell size={14} style={{ color: '#3B82F6' }} />
+                <div className="neo-card p-8 group relative overflow-hidden shadow-lg border-emerald-500/10">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-emerald-500/10 transition-colors" />
+                    <div className="flex items-center gap-3 mb-6">
+                        <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500 transition-transform group-hover:rotate-6">
+                            <Bell size={18} />
                         </div>
-                        <span className="neo-label">Biosphere Equilibrium</span>
+                        <span className="text-[10px] font-black uppercase tracking-[0.3em] opacity-40">Nature Offset</span>
                     </div>
-                    <div style={{ fontFamily: 'Orbitron, monospace', fontWeight: 900, fontSize: '2.5rem', color: 'var(--text)', marginBottom: '0.25rem' }}>
-                        {co2 > 0 ? (co2 * 7 / 0.42).toFixed(1) : '—'}
+                    <div className="space-y-4">
+                        <div className="font-inter font-black text-5xl text-text-light dark:text-text-dark tracking-tighter leading-none">
+                            {co2 > 0 ? (co2 * 7 / 0.42).toFixed(1) : '0.0'}
+                        </div>
+                        <div className="flex flex-col gap-1">
+                            <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600">Trees needed for offset</span>
+                            <p className="text-[9px] font-bold opacity-30 italic">Recommended trees to plant per week</p>
+                        </div>
                     </div>
-                    <p className="neo-label">Trees Sync</p>
-                    <p className="neo-label" style={{ marginTop: '0.5rem', color: 'var(--text-muted)' }}>PROTOCOL: Nature Reserve V2</p>
                 </div>
             </div>
 
             {/* AI suggestions */}
             {aiTips.length > 0 && (
-                <div>
-                    <h3 className="neo-heading" style={{ fontSize: '1rem', marginBottom: '1rem' }}>AI-Generated Protocols</h3>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                <div className="space-y-6">
+                    <div className="flex items-center gap-3">
+                        <Activity size={16} className="text-primary-light" />
+                        <h3 className="font-inter font-black text-xs uppercase tracking-[0.2em] text-text-muted">AI Recommendations</h3>
+                    </div>
+                    <div className="grid grid-cols-1 gap-4">
                         {aiTips.map((tip, i) => (
-                            <div key={i} className="neo-card" style={{ padding: '1rem 1.25rem', display: 'flex', alignItems: 'flex-start', gap: '1rem', borderLeft: '2px solid var(--accent)' }}>
-                                <div style={{ width: 28, height: 28, borderRadius: '0.5rem', background: 'rgba(0,255,136,0.1)', border: '1px solid rgba(0,255,136,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                                    <Leaf size={14} style={{ color: 'var(--accent)' }} />
+                            <div key={i} className="neo-card p-6 flex items-start gap-5 group hover:translate-x-1 transition-all border-l-4 border-l-primary-light shadow-sm">
+                                <div className="w-10 h-10 rounded-xl bg-primary-light/5 border border-primary-light/10 flex items-center justify-center shrink-0 group-hover:bg-primary-light/10 transition-colors">
+                                    <Leaf size={18} className="text-primary-light" />
                                 </div>
-                                <p style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.95rem', color: 'var(--text)', lineHeight: 1.5 }}>{tip}</p>
+                                <p className="font-inter font-medium text-sm text-text-light dark:text-text-dark leading-relaxed py-1">{tip}</p>
                             </div>
                         ))}
                     </div>
@@ -98,24 +115,29 @@ const EcoTips = () => {
             )}
 
             {/* Static tips grid */}
-            <div>
-                <h3 className="neo-heading" style={{ fontSize: '1rem', marginBottom: '1rem' }}>General Eco Protocols</h3>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
+            <div className="space-y-6">
+                <div className="flex items-center gap-3">
+                    <Zap size={16} className="text-secondary-light" />
+                    <h3 className="font-inter font-black text-xs uppercase tracking-[0.2em] text-text-muted">General Eco Tips</h3>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {STATIC_TIPS.map((tip, i) => {
                         const TipIcon = tip.icon;
                         return (
-                            <div key={i} className="neo-card" style={{ padding: '1.25rem' }}>
-                                <div style={{ width: 40, height: 40, borderRadius: '0.75rem', background: `${tip.color}18`, border: `1px solid ${tip.color}44`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '0.75rem' }}>
-                                    <TipIcon size={20} style={{ color: tip.color }} />
+                            <div key={i} className="neo-card p-8 flex flex-col gap-4 group hover:translate-y-[-4px] transition-all shadow-sm border-t-4" style={{ borderTopColor: tip.color }}>
+                                <div className="w-12 h-12 rounded-2xl flex items-center justify-center transition-transform duration-500 group-hover:rotate-[360deg] shadow-inner" style={{ background: `${tip.color}10`, border: `1px solid ${tip.color}20` }}>
+                                    <TipIcon size={24} style={{ color: tip.color }} />
                                 </div>
-                                <h4 style={{ fontFamily: 'Rajdhani, sans-serif', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', fontSize: '0.85rem', color: 'var(--text)', marginBottom: '0.5rem' }}>{tip.title}</h4>
-                                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: 1.5 }}>{tip.body}</p>
+                                <div className="space-y-2">
+                                    <h4 className="font-inter font-black text-[11px] uppercase tracking-wider transition-colors group-hover:text-primary-light" style={{ color: tip.color }}>{tip.title}</h4>
+                                    <p className="font-inter text-xs text-text-muted leading-relaxed">{tip.body}</p>
+                                </div>
                             </div>
                         );
                     })}
                 </div>
             </div>
-        </div>
+        </motion.div>
     );
 };
 

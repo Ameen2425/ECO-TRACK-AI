@@ -14,6 +14,12 @@ import Reports     from './pages/Reports';
 import EcoTips     from './pages/EcoTips';
 import HallOfFame  from './pages/HallOfFame';
 import Profile     from './pages/Profile';
+import DataHistory from './pages/DataHistory';
+import Settings    from './pages/Settings';
+
+import LandingPage from './pages/LandingPage';
+
+import { Outlet } from 'react-router-dom';
 
 const ProtectedRoute = ({ children }) => {
     const { token } = useAuth();
@@ -21,42 +27,66 @@ const ProtectedRoute = ({ children }) => {
 };
 
 const AuthLayout = ({ children }) => (
-    <div style={{ minHeight: '100vh', background: 'var(--bg-base)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+    <div className="min-h-screen bg-background-light dark:bg-background-dark flex items-center justify-center p-4">
         {children}
     </div>
 );
 
-const AppLayout = ({ children }) => (
-    <div style={{ minHeight: '100vh', background: 'var(--bg-base)' }}>
-        <Sidebar />
-        <div className="neo-main" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-            <Topbar />
-            <main style={{ flex: 1, padding: '2rem' }}>
-                {children}
-            </main>
-        </div>
-    </div>
-);
+const AppLayout = () => {
+    const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
 
-const PR = ({ page }) => (
-    <ProtectedRoute><AppLayout>{page}</AppLayout></ProtectedRoute>
-);
+    return (
+        <div className="h-screen bg-background-light dark:bg-background-dark flex overflow-hidden relative">
+            <Sidebar 
+                className="shrink-0 h-full" 
+                isOpen={isSidebarOpen} 
+                onClose={() => setIsSidebarOpen(false)} 
+            />
+            
+            {/* Mobile Overlay */}
+            {isSidebarOpen && (
+                <div 
+                    className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 lg:hidden"
+                    onClick={() => setIsSidebarOpen(false)}
+                />
+            )}
+
+            <div className="flex-1 flex flex-col min-w-0 h-full">
+                <Topbar onMenuClick={() => setIsSidebarOpen(true)} />
+                <main className="flex-1 overflow-y-auto p-4 md:p-10 custom-scrollbar">
+                    <div className="max-w-[1600px] mx-auto w-full">
+                        <Outlet />
+                    </div>
+                </main>
+            </div>
+        </div>
+    );
+};
 
 function AppRoutes() {
     const { token } = useAuth();
     return (
         <Routes>
-            <Route path="/login"                element={<AuthLayout><Login /></AuthLayout>} />
-            <Route path="/register"             element={<AuthLayout><Register /></AuthLayout>} />
-            <Route path="/"                     element={<Navigate to={token ? '/dashboard' : '/login'} />} />
-            <Route path="/dashboard"            element={<PR page={<Dashboard />} />} />
-            <Route path="/add-data"             element={<PR page={<AddEmissionPage />} />} />
-            <Route path="/calculation-process"  element={<PR page={<CalculationProcess />} />} />
-            <Route path="/quick-check"          element={<PR page={<QuickCheck />} />} />
-            <Route path="/reports"              element={<PR page={<Reports />} />} />
-            <Route path="/tips"                 element={<PR page={<EcoTips />} />} />
-            <Route path="/leaderboard"          element={<PR page={<HallOfFame />} />} />
-            <Route path="/profile"              element={<PR page={<Profile />} />} />
+            {/* Auth Routes */}
+            <Route path="/login" element={<AuthLayout><Login /></AuthLayout>} />
+            <Route path="/register" element={<AuthLayout><Register /></AuthLayout>} />
+            
+            {/* Public/Root Route */}
+            <Route path="/" element={token ? <Navigate to="/dashboard" /> : <LandingPage />} />
+
+            {/* Protected App Routes */}
+            <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/add-data" element={<AddEmissionPage />} />
+                <Route path="/calculation-process" element={<CalculationProcess />} />
+                <Route path="/quick-check" element={<QuickCheck />} />
+                <Route path="/reports" element={<Reports />} />
+                <Route path="/tips" element={<EcoTips />} />
+                <Route path="/history" element={<DataHistory />} />
+                <Route path="/leaderboard" element={<HallOfFame />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/settings" element={<Settings />} />
+            </Route>
         </Routes>
     );
 }

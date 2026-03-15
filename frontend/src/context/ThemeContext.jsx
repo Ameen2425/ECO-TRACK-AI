@@ -9,8 +9,16 @@ export const ThemeProvider = ({ children }) => {
     });
 
     useEffect(() => {
+        const root = document.documentElement;
         const theme = isDarkMode ? 'dark' : 'light';
-        document.documentElement.setAttribute('data-theme', theme);
+        
+        root.setAttribute('data-theme', theme);
+        if (isDarkMode) {
+            root.classList.add('dark');
+        } else {
+            root.classList.remove('dark');
+        }
+        
         localStorage.setItem('theme', theme);
     }, [isDarkMode]);
 

@@ -13,7 +13,7 @@ def create_app():
     db.init_app(app)
     bcrypt.init_app(app)
     jwt.init_app(app)
-    cors.init_app(app)
+    cors.init_app(app, resources={r"/api/*": {"origins": "*"}}, supports_credentials=True)
     migrate.init_app(app, db)
 
     from routes.auth import auth_bp
@@ -23,6 +23,10 @@ def create_app():
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(emissions_bp, url_prefix='/api/emissions')
     app.register_blueprint(analytics_bp, url_prefix='/api/analytics')
+
+    @app.route('/uploads/<path:filename>')
+    def serve_uploads(filename):
+        return send_from_directory(os.path.abspath('uploads'), filename)
 
     @app.route('/')
     def index():

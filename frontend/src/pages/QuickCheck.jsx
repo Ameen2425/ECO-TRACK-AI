@@ -2,7 +2,11 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
-import { Car, Zap, Utensils, Calculator, Leaf, TrendingDown, TrendingUp, ArrowRight } from 'lucide-react';
+import { 
+    Car, Zap, Utensils, Calculator, Leaf, TrendingDown, 
+    TrendingUp, ArrowRight, Activity, Plus, Minus, Globe, Target
+} from 'lucide-react';
+import { motion } from 'framer-motion';
 
 const TRANSPORT_TYPES = ['Petrol', 'Diesel', 'Electric', 'Bus', 'Bike', 'Walk'];
 const DIET_TYPES      = ['Vegan', 'Vegetarian', 'Non-Vegetarian'];
@@ -15,15 +19,11 @@ const FACTORS = {
 };
 
 const Btn = ({ label, active, color, onClick }) => (
-    <button type="button" onClick={onClick} style={{
-        padding: '0.6rem 0.5rem', borderRadius: '0.75rem', cursor: 'pointer',
-        fontFamily: 'Rajdhani, sans-serif', fontWeight: 700,
-        textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: '0.8rem',
-        transition: 'all 0.2s',
-        background: active ? `${color}18` : 'var(--bg-card)',
-        border: `1px solid ${active ? color : 'var(--border)'}`,
-        color: active ? color : 'var(--text-muted)',
-    }}>{label}</button>
+    <button type="button" onClick={onClick} 
+        className={`px-4 py-2.5 rounded-xl font-inter font-black text-[9px] uppercase tracking-wider transition-all shadow-sm border ${active ? 'bg-primary-light/10 border-primary-light text-primary-light ring-2 ring-primary-light/5' : 'bg-gray-50/50 dark:bg-gray-900/50 border-eco-border text-text-muted hover:border-primary-light/30'}`}
+        style={{ color: active ? color : undefined, borderColor: active ? color : undefined, background: active ? `${color}10` : undefined }}>
+        {label}
+    </button>
 );
 
 const QuickCheck = () => {
@@ -34,12 +34,10 @@ const QuickCheck = () => {
         kwh: '8', diet: 'Non-Vegetarian',
         gas: '2', waste: '1',
     });
-    const [result, setResult] = useState(null);
     const [loading, setLoading] = useState(false);
     const [saved,   setSaved]   = useState(false);
     const f = v => parseFloat(v) || 0;
 
-    // Instant inline calculation
     const co2 = +(
         f(form.km) * (FACTORS[form.transport.toLowerCase()] ?? 0.18) +
         f(form.kwh) * FACTORS.electricity +
@@ -54,7 +52,7 @@ const QuickCheck = () => {
     const handleSave = async () => {
         setLoading(true);
         try {
-            const res = await axios.post('http://localhost:5000/api/emissions/add', {
+            await axios.post('http://localhost:5000/api/emissions/add', {
                 transport_km:    form.km,
                 transport_type:  form.transport,
                 electricity_kwh: form.kwh,
@@ -62,119 +60,177 @@ const QuickCheck = () => {
                 gas_usage:       form.gas,
                 waste_kg:        form.waste,
             }, { headers: { Authorization: `Bearer ${token}` } });
-            setResult(res.data);
             setSaved(true);
-        } catch (e) { console.error(e); }
-        finally { setLoading(false); }
+            setTimeout(() => navigate('/dashboard'), 2000);
+        } catch (e) { 
+            console.error(e); 
+        } finally { 
+            setLoading(false); 
+        }
     };
 
     const Row = ({ label, field, unit, step = 1 }) => (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', justifyContent: 'space-between' }}>
-            <span className="neo-label" style={{ minWidth: 130 }}>{label}</span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <div className="flex items-center gap-4 justify-between group">
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40 min-w-[120px] group-hover:opacity-100 transition-opacity italic">{label}</span>
+            <div className="flex items-center gap-2">
                 <button type="button" onClick={() => setForm(p => ({ ...p, [field]: Math.max(0, +(f(p[field]) - step)).toString() }))}
-                    style={{ width: 32, height: 32, borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '1.1rem' }}>−</button>
+                    className="w-10 h-10 rounded-xl bg-white dark:bg-gray-900 border border-eco-border flex items-center justify-center text-text-muted hover:text-eco-green hover:border-eco-green transition-all shadow-sm">
+                    <Minus size={16} />
+                </button>
                 <input type="number" value={form[field]}
                     onChange={e => setForm(p => ({ ...p, [field]: e.target.value }))}
-                    style={{ width: 80, textAlign: 'center', padding: '0.4rem', fontFamily: 'Orbitron, monospace', fontSize: '1rem', color: 'var(--text)', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '0.5rem', outline: 'none' }} />
+                    className="w-24 text-center py-2.5 rounded-xl bg-gray-50/50 dark:bg-gray-900 border border-eco-border outline-none font-inter font-black text-sm transition-all focus:border-eco-green" />
                 <button type="button" onClick={() => setForm(p => ({ ...p, [field]: (+(f(p[field]) + step)).toString() }))}
-                    style={{ width: 32, height: 32, borderRadius: '0.5rem', border: '1px solid var(--accent)', background: 'rgba(0,255,136,0.08)', color: 'var(--accent)', cursor: 'pointer', fontSize: '1.1rem', fontWeight: 700 }}>+</button>
-                <span className="neo-label">{unit}</span>
+                    className="w-10 h-10 rounded-xl bg-eco-green/5 border border-eco-green/10 flex items-center justify-center text-eco-green hover:bg-eco-green hover:text-white transition-all shadow-sm hover:shadow-eco-green/20">
+                    <Plus size={16} />
+                </button>
+                <span className="text-[9px] font-black uppercase tracking-widest opacity-30 w-10 italic">{unit}</span>
             </div>
         </div>
     );
 
     return (
-        <div style={{ maxWidth: 760, paddingBottom: '3rem', display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-            <div>
-                <h2 className="neo-heading" style={{ fontSize: '1.8rem' }}>Quick Check</h2>
-                <p className="neo-label mt-1">Instant carbon footprint estimate — results update in real-time</p>
+        <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="max-w-5xl pb-12 flex flex-col gap-10"
+        >
+            <div className="space-y-1">
+                <h2 className="text-2xl font-inter font-black tracking-tight text-text-light dark:text-text-dark uppercase italic">Instant Analysis</h2>
+                <p className="text-[10px] font-medium opacity-50 uppercase tracking-widest">Rapidly estimate your daily carbon footprint and archive the result</p>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 260px', gap: '1.5rem', alignItems: 'start' }}>
-                {/* Input panel */}
-                <div className="neo-card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                    <div>
-                        <p className="neo-label" style={{ marginBottom: '0.75rem' }}>Transport</p>
-                        <Row label="Distance" field="km" unit="KM" step={5} />
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem', marginTop: '0.75rem' }}>
+            <div className="grid grid-cols-1 lg:grid-cols-[1fr_350px] gap-8 items-start">
+                <div className="neo-card p-10 flex flex-col gap-10 shadow-2xl relative overflow-hidden">
+                    <div className="absolute top-0 right-0 p-12 opacity-[0.02] pointer-events-none">
+                        <Globe size={300} />
+                    </div>
+
+                    <div className="space-y-8 relative z-10">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-analytics-blue/10 border border-analytics-blue/20 flex items-center justify-center text-analytics-blue shadow-sm">
+                                <Car size={18} />
+                            </div>
+                            <h4 className="font-inter font-black text-xs uppercase tracking-[0.2em] text-text-light dark:text-text-dark italic">Transport Dynamics</h4>
+                        </div>
+                        <Row label="Distance Matrix" field="km" unit="KM" step={5} />
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
                             {TRANSPORT_TYPES.map(t => (
-                                <Btn key={t} label={t} active={form.transport.toLowerCase() === t.toLowerCase()} color="#3B82F6"
+                                <Btn key={t} label={t} active={form.transport.toLowerCase() === t.toLowerCase()} color="#2563EB"
                                     onClick={() => setForm(p => ({ ...p, transport: t.toLowerCase() }))} />
                             ))}
                         </div>
                     </div>
 
-                    <div style={{ borderTop: '1px solid var(--border)', paddingTop: '1.25rem' }}>
-                        <p className="neo-label" style={{ marginBottom: '0.75rem' }}>Energy</p>
-                        <Row label="Electricity" field="kwh" unit="KWH" step={2} />
-                        <Row label="Gas / Heating" field="gas" unit="M³" step={0.5} />
-                    </div>
+                    <div className="h-px bg-border relative z-10" />
 
-                    <div style={{ borderTop: '1px solid var(--border)', paddingTop: '1.25rem' }}>
-                        <p className="neo-label" style={{ marginBottom: '0.75rem' }}>Diet</p>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }}>
-                            {DIET_TYPES.map(t => (
-                                <Btn key={t} label={t} active={form.diet === t} color="#00FF88"
-                                    onClick={() => setForm(p => ({ ...p, diet: t }))} />
-                            ))}
+                    <div className="space-y-8 relative z-10">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-eco-green/10 border border-eco-green/20 flex items-center justify-center text-eco-green shadow-sm">
+                                <Zap size={18} />
+                            </div>
+                            <h4 className="font-inter font-black text-xs uppercase tracking-[0.2em] text-text-light dark:text-text-dark italic">Energy Infrastructure</h4>
+                        </div>
+                        <div className="space-y-6">
+                            <Row label="Grid Consumption" field="kwh" unit="KWH" step={2} />
+                            <Row label="Thermal Load" field="gas" unit="M³" step={0.5} />
                         </div>
                     </div>
 
-                    <div style={{ borderTop: '1px solid var(--border)', paddingTop: '1.25rem' }}>
-                        <p className="neo-label" style={{ marginBottom: '0.75rem' }}>Waste</p>
-                        <Row label="Refuse" field="waste" unit="KG" step={0.5} />
+                    <div className="h-px bg-border relative z-10" />
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-10 relative z-10">
+                        <div className="space-y-8">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500 shadow-sm">
+                                    <Utensils size={18} />
+                                </div>
+                                <h4 className="font-inter font-black text-xs uppercase tracking-[0.2em] text-text-light dark:text-text-dark italic">Nutritional Node</h4>
+                            </div>
+                            <div className="grid grid-cols-1 gap-3">
+                                {DIET_TYPES.map(t => (
+                                    <Btn key={t} label={t} active={form.diet === t} color="#10B981"
+                                        onClick={() => setForm(p => ({ ...p, diet: t }))} />
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="space-y-8">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-xl bg-gray-500/10 border border-gray-500/20 flex items-center justify-center text-gray-500 shadow-sm">
+                                    <Calculator size={18} />
+                                </div>
+                                <h4 className="font-inter font-black text-xs uppercase tracking-[0.2em] text-text-light dark:text-text-dark italic">Waste Management</h4>
+                            </div>
+                            <Row label="Refuse Output" field="waste" unit="KG" step={0.5} />
+                        </div>
                     </div>
                 </div>
 
-                {/* Live result panel */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', position: 'sticky', top: '5rem' }}>
-                    <div className="neo-card-glow" style={{ padding: '1.5rem', textAlign: 'center' }}>
-                        <p className="neo-label">Live Estimate</p>
-                        <div className="text-glow" style={{ fontFamily: 'Orbitron, monospace', fontWeight: 900, fontSize: '3rem', color: 'var(--accent)', margin: '0.5rem 0' }}>
-                            {co2.toFixed(2)}
+                <div className="space-y-8 sticky top-8">
+                    {/* Live Magnitude Card */}
+                    <div className="neo-card p-10 text-center relative overflow-hidden group shadow-2xl border-t-4 border-analytics-blue bg-white dark:bg-gray-900">
+                        <div className="absolute inset-0 bg-analytics-blue/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <span className="text-[10px] font-black uppercase tracking-[0.3em] opacity-40">Live Magnitude</span>
+                        <div className="font-inter font-black text-7xl tracking-tighter text-analytics-blue mt-6 mb-2 transition-transform duration-700 group-hover:scale-110 italic drop-shadow-2xl">
+                            {co2.toFixed(1)}
                         </div>
-                        <p className="neo-label">KG CO₂E today</p>
+                        <p className="text-[10px] font-black uppercase tracking-widest opacity-60">KG CO₂ / DAILY ESTIMATE</p>
 
-                        <div style={{ marginTop: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
-                            {isGood ? <TrendingDown size={16} style={{ color: 'var(--accent)' }} /> : <TrendingUp size={16} style={{ color: '#ef4444' }} />}
-                            <span style={{ fontFamily: 'Rajdhani, sans-serif', fontWeight: 700, color: isGood ? 'var(--accent)' : '#ef4444', fontSize: '0.9rem' }}>
-                                {isGood ? 'Below average' : 'Above average'}
+                        <div className="mt-10 flex items-center justify-center gap-3 py-2 px-5 rounded-2xl bg-gray-100/50 dark:bg-gray-800/50 border border-eco-border inline-flex shadow-inner">
+                            {isGood ? <TrendingDown size={14} className="text-eco-green" /> : <TrendingUp size={14} className="text-analytics-blue" />}
+                            <span className={`text-[10px] font-extrabold uppercase tracking-wider ${isGood ? 'text-eco-green' : 'text-analytics-blue'}`}>
+                                {isGood ? 'Optimal Range' : 'Above Average'}
                             </span>
                         </div>
                     </div>
 
-                    <div className="neo-card" style={{ padding: '1.25rem', textAlign: 'center' }}>
-                        <p className="neo-label">Eco Score</p>
-                        <div style={{ fontFamily: 'Orbitron, monospace', fontWeight: 900, fontSize: '2.5rem', color: score > 60 ? 'var(--accent)' : '#F59E0B', marginTop: '0.25rem' }}>
-                            {score}
+                    <div className="grid grid-cols-2 gap-6">
+                        <div className="neo-card p-6 text-center shadow-lg border-l-4 border-eco-green">
+                            <p className="text-[9px] font-black uppercase tracking-[0.2em] opacity-40">Eco Score</p>
+                            <div className="font-inter font-black text-3xl tracking-tighter mt-1 italic" style={{ color: score > 60 ? '#16A34A' : '#2563EB' }}>
+                                {score}
+                            </div>
                         </div>
-                        <p className="neo-label">{score > 60 ? 'Low Impact' : score > 30 ? 'Moderate' : 'High Impact'}</p>
+                        <div className="neo-card p-6 text-center shadow-lg border-l-4 border-analytics-blue">
+                            <p className="text-[9px] font-black uppercase tracking-[0.2em] opacity-40">Stability</p>
+                            <div className={`font-inter font-black text-xs tracking-widest mt-3 flex items-center justify-center gap-2 ${saved ? 'text-eco-green' : 'text-text-muted'}`}>
+                                <div className={`w-1.5 h-1.5 rounded-full ${saved ? 'bg-eco-green animate-pulse shadow-[0_0_8px_rgba(22,163,74,0.5)]' : 'bg-gray-400'}`} />
+                                {saved ? 'STABLE' : 'PENDING'}
+                            </div>
+                        </div>
                     </div>
 
-                    <div className="neo-card" style={{ padding: '1.25rem', textAlign: 'center' }}>
-                        <p className="neo-label">Trees Needed</p>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', marginTop: '0.25rem' }}>
-                            <Leaf size={20} style={{ color: 'var(--accent)' }} />
-                            <span style={{ fontFamily: 'Orbitron, monospace', fontWeight: 900, fontSize: '2rem', color: 'var(--text)' }}>
+                    <div className="neo-card p-8 flex items-center gap-6 shadow-xl border-l-4 border-emerald-500">
+                        <div className="w-14 h-14 rounded-2xl bg-emerald-50 dark:bg-emerald-950/20 flex items-center justify-center text-emerald-600 border border-emerald-100 dark:border-emerald-900/40 shadow-inner">
+                            <Leaf size={28} />
+                        </div>
+                        <div>
+                            <div className="font-inter font-black text-3xl tracking-tighter text-text-light dark:text-text-dark italic leading-none">
                                 {Math.ceil(co2 * 7 / 0.42)}
-                            </span>
+                            </div>
+                            <span className="text-[9px] font-black uppercase tracking-widest opacity-40">Nature Offset Node</span>
                         </div>
-                        <p className="neo-label">to offset weekly</p>
                     </div>
 
                     {!saved ? (
-                        <button onClick={handleSave} disabled={loading} className="btn-neo" style={{ justifyContent: 'center', padding: '0.75rem' }}>
-                            <Calculator size={16} /> {loading ? 'Saving...' : 'Save to Dashboard'}
+                        <button onClick={handleSave} disabled={loading} className="btn-neo w-full py-5 justify-center shadow-2xl shadow-eco-green/20 group text-sm relative overflow-hidden bg-eco-green">
+                            <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
+                            <div className="relative z-10 flex items-center gap-3">
+                                {loading ? <Activity size={18} className="animate-spin" /> : <Target size={18} />}
+                                <span className="font-black uppercase tracking-[0.2em]">{loading ? 'Synthesizing...' : 'Commit to Archive'}</span>
+                            </div>
                         </button>
                     ) : (
-                        <button onClick={() => navigate('/dashboard')} className="btn-neo" style={{ justifyContent: 'center', padding: '0.75rem' }}>
-                            <ArrowRight size={16} /> View Dashboard
+                        <button onClick={() => navigate('/dashboard')} className="btn-neo-outline w-full py-5 justify-center border-eco-green text-eco-green group text-sm">
+                            <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                            <span className="font-black uppercase tracking-[0.2em] ml-2">Open Terminal</span>
                         </button>
                     )}
                 </div>
             </div>
-        </div>
+        </motion.div>
     );
 };
 

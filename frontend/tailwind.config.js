@@ -8,23 +8,57 @@ export default {
   theme: {
     extend: {
       colors: {
-        neo: {
-          dark:     '#0A0E14',   // Deepest background
-          surface:  '#0F1419',   // Sidebar/panel bg
-          card:     '#141B22',   // Card bg
-          'card-hover': '#1A2230',
-          border:   '#1E2A38',   // Subtle borders
-          green:    '#00FF88',   // Neon green accent
-          'green-dim': '#00CC6A', // Dimmer green
-          text:     '#E8F0FE',   // Primary text
-          'text-muted': '#5A7A8A', // Muted text
-          'text-dim':   '#3A5468',  // Very dim
-        }
+        primary: {
+          DEFAULT: 'var(--eco-primary)',
+          light: 'var(--eco-primary)',
+          dark: 'var(--eco-primary)',
+        },
+        secondary: {
+          DEFAULT: 'var(--eco-secondary)',
+          light: 'var(--eco-secondary)',
+          dark: 'var(--eco-secondary)',
+        },
+        'eco-green': {
+          DEFAULT: 'var(--eco-primary)',
+          light: 'var(--eco-primary)',
+          dark: 'var(--eco-primary)',
+        },
+        'analytics-blue': {
+          DEFAULT: 'var(--analytics-blue)',
+          light: 'var(--analytics-blue)',
+          dark: 'var(--analytics-blue)',
+        },
+        background: {
+          DEFAULT: 'var(--bg-base)',
+          light: 'var(--bg-base)',
+          dark: 'var(--bg-base)',
+          surface: 'var(--bg-surface)',
+        },
+        card: {
+          DEFAULT: 'var(--bg-card)',
+          light: 'var(--bg-card)',
+          dark: 'var(--bg-card)',
+        },
+        text: {
+          DEFAULT: 'var(--text)',
+          light: 'var(--text)',
+          dark: 'var(--text)',
+          muted: 'var(--text-muted)',
+          dim: 'var(--text-dim)',
+        },
+        'eco-border': 'var(--border)',
+        'eco-surface': 'var(--bg-surface)',
+        accent: 'var(--accent)',
+        'accent-secondary': 'var(--accent-secondary)',
       },
       fontFamily: {
+        inter: ['Inter', 'sans-serif'],
+        poppins: ['Poppins', 'sans-serif'],
         orbitron: ['Orbitron', 'monospace'],
         rajdhani: ['Rajdhani', 'sans-serif'],
-        inter:    ['Inter', 'sans-serif'],
+      },
+      transitionDuration: {
+        '300': '300ms',
       },
       animation: {
         'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',

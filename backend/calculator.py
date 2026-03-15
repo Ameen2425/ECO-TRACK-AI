@@ -4,12 +4,16 @@ from datetime import datetime, timedelta
 # Standard Emission Factors (approximate values in kg CO2e per unit)
 EMISSION_FACTORS = {
     'transport': {
-        'car_petrol': 0.18,  # per km
-        'car_diesel': 0.17,
-        'car_electric': 0.05,
+        'petrol': 0.18,  # per km
+        'diesel': 0.17,
+        'electric': 0.05,
         'bus': 0.03,
         'bike': 0.0,
-        'walk': 0.0
+        'walk': 0.0,
+        # Legacy support
+        'car_petrol': 0.18,
+        'car_diesel': 0.17,
+        'car_electric': 0.05
     },
     'energy': {
         'electricity': 0.5,  # per kWh (average grid)
@@ -18,7 +22,8 @@ EMISSION_FACTORS = {
     'food': {
         'vegan': 1.5,       # per day
         'vegetarian': 2.5,
-        'non_veg': 5.0
+        'non-vegetarian': 5.0,
+        'non_veg': 5.0      # legacy support
     },
     'waste': {
         'general': 0.5      # per kg
@@ -41,11 +46,15 @@ def calculate_co2(data):
     gas_usage = to_f(data.get('gas_usage', 0))
     waste_kg = to_f(data.get('waste_kg', 0))
 
-    transport_co2 = transport_km * EMISSION_FACTORS['transport'].get(data.get('transport_type', 'car_petrol'), 0.18)
+    t_type = str(data.get('transport_type', 'petrol')).lower()
+    transport_co2 = transport_km * EMISSION_FACTORS['transport'].get(t_type, 0.18)
+    
     electricity_co2 = electricity_kwh * EMISSION_FACTORS['energy']['electricity']
-    # Handle both food_type and diet_type
-    food_val = data.get('food_type') or data.get('diet_type', 'non_veg')
+    
+    # Handle food impact
+    food_val = str(data.get('food_type') or data.get('diet_type', 'non-vegetarian')).lower()
     food_co2 = EMISSION_FACTORS['food'].get(food_val, 5.0)
+    
     gas_co2 = gas_usage * EMISSION_FACTORS['energy']['gas']
     waste_co2 = waste_kg * EMISSION_FACTORS['waste']['general']
     
@@ -67,32 +76,32 @@ def get_sustainability_score(total_footprint):
 
 def get_carbon_classification(total_footprint):
     """
-    Classifies user based on daily CO2 footprint.
+    Classifies user based on daily CO2 footprint and assigns badges.
     """
     if total_footprint < 5:
         return {
-            "label": "Climate Conscious",
-            "badge": "🌍",
+            "label": "Green Guardian",
+            "badge": "🛡️",
             "description": "Your footprint is minimal. You are a global guardian.",
             "color": "#10b981" # Emerald-500
         }
     if total_footprint < 15:
         return {
-            "label": "Low Impact User",
-            "badge": "🌱",
+            "label": "Climate Champion",
+            "badge": "🏆",
             "description": "Exemplary efficiency. Keep maintaining this level.",
             "color": "#34d399" # Emerald-400
         }
     if total_footprint < 25:
         return {
-            "label": "Moderate Impact",
-            "badge": "🌿",
+            "label": "Eco Saver",
+            "badge": "💰",
             "description": "Standard emission level. Room for minor optimization.",
             "color": "#fbbf24" # Amber-400
         }
     return {
-        "label": "High Impact",
-        "badge": "🌳",
+        "label": "Eco Beginner",
+        "badge": "🌱",
         "description": "Emission intensity is high. Deploy reduction protocols.",
         "color": "#ef4444" # Red-500
     }
@@ -100,12 +109,11 @@ def get_carbon_classification(total_footprint):
 def get_offset_data(daily_co2):
     """
     Calculates trees needed and offset impact.
-    A mature tree absorbs ~22kg CO2 per year, or ~0.06kg per day.
+    Formula: Trees Needed = Total CO2 / 21 (approx yearly absorption per tree)
     """
-    weekly_co2 = daily_co2 * 7
-    trees_needed = round(weekly_co2 / 0.42, 1) # Weekly absorption of one tree (22/52)
+    trees_needed = daily_co2 / 21
     return {
-        "weekly_co2": round(weekly_co2, 2),
+        "daily_co2": daily_co2,
         "trees_to_offset": math.ceil(trees_needed),
         "offset_impact_percent": 100 if daily_co2 == 0 else min(100, round((0.06 / daily_co2) * 100, 1))
     }

@@ -53,10 +53,13 @@ def add_emission():
     db.session.add(new_record)
     db.session.commit()
 
+    offset_data = get_offset_data(total_co2)
+
     return jsonify({
         "msg": "Record added",
         "total_co2": total_co2,
-        "score": get_sustainability_score(total_co2)
+        "score": get_sustainability_score(total_co2),
+        "trees_to_offset": offset_data['trees_to_offset']
     }), 201
 
 @emissions_bp.route('/dashboard', methods=['GET'])
@@ -118,5 +121,49 @@ def get_history():
     return jsonify([{
         "id": r.id,
         "total_co2": r.total_co2,
+        "transport_km": r.transport_km,
+        "transport_type": r.transport_type,
+        "electricity_kwh": r.electricity_kwh,
+        "diet_type": r.diet_type,
+        "gas_usage": r.gas_usage,
+        "waste_kg": r.waste_kg,
         "created_at": r.created_at.isoformat()
     } for r in records]), 200
+
+@emissions_bp.route('/update/<int:record_id>', methods=['PUT'])
+@emissions_bp.route('/<int:record_id>', methods=['PUT'])
+@jwt_required()
+def update_emission(record_id):
+    user_id = get_jwt_identity()
+    record = EmissionRecord.query.filter_by(id=record_id, user_id=int(user_id)).first()
+    
+    if not record:
+        return jsonify({"msg": "Record not found"}), 404
+    
+    data = request.get_json()
+    record.transport_km = data.get('transport_km', record.transport_km)
+    record.transport_type = data.get('transport_type', record.transport_type)
+    record.electricity_kwh = data.get('electricity_kwh', record.electricity_kwh)
+    record.diet_type = data.get('diet_type', record.diet_type)
+    record.gas_usage = data.get('gas_usage', record.gas_usage)
+    record.waste_kg = data.get('waste_kg', record.waste_kg)
+    
+    record.total_co2 = calculate_co2(data)
+    db.session.commit()
+    
+    return jsonify({"msg": "Record updated", "total_co2": record.total_co2}), 200
+
+@emissions_bp.route('/delete/<int:record_id>', methods=['DELETE'])
+@emissions_bp.route('/<int:record_id>', methods=['DELETE'])
+@jwt_required()
+def delete_emission(record_id):
+    user_id = get_jwt_identity()
+    record = EmissionRecord.query.filter_by(id=record_id, user_id=int(user_id)).first()
+    
+    if not record:
+        return jsonify({"msg": "Record not found"}), 404
+    
+    db.session.delete(record)
+    db.session.commit()
+    
+    return jsonify({"msg": "Record deleted"}), 200
