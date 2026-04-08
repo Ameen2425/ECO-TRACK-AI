@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, send_from_directory
 from extensions import db, bcrypt, jwt, cors, migrate
 import os
 
@@ -9,7 +9,6 @@ def create_app():
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['JWT_SECRET_KEY'] = 'jwt_secret_key_here'
 
-    # Initialize extensions
     db.init_app(app)
     bcrypt.init_app(app)
     jwt.init_app(app)
@@ -19,10 +18,12 @@ def create_app():
     from routes.auth import auth_bp
     from routes.emissions import emissions_bp
     from routes.analytics import analytics_bp
+    from routes.settings import settings_bp
 
-    app.register_blueprint(auth_bp, url_prefix='/api/auth')
+    app.register_blueprint(auth_bp,      url_prefix='/api/auth')
     app.register_blueprint(emissions_bp, url_prefix='/api/emissions')
     app.register_blueprint(analytics_bp, url_prefix='/api/analytics')
+    app.register_blueprint(settings_bp,  url_prefix='/api/settings')
 
     @app.route('/uploads/<path:filename>')
     def serve_uploads(filename):
@@ -32,9 +33,9 @@ def create_app():
     def index():
         return {"message": "Eco-Track AI API is running"}
 
+    # Legacy alias routes
     @app.route('/api/sync', methods=['POST'])
     @app.route('/sync', methods=['POST'])
-    @app.route('/api/records', methods=['POST'])  # Added to match NEON-AI sync
     def global_sync():
         from routes.emissions import add_emission
         return add_emission()
@@ -50,7 +51,6 @@ def create_app():
         from routes.emissions import get_dashboard
         return get_dashboard()
 
-    # Redundant if blueprint handles it, but good for explicit routing
     @app.route('/api/analytics', methods=['GET'])
     def global_analytics():
         from routes.analytics import get_analytics
