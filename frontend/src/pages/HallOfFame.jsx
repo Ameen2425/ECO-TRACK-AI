@@ -38,21 +38,41 @@ const HallOfFame = () => {
         }).finally(() => setLoading(false));
     }, [token]);
 
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: {
+                staggerChildren: 0.1,
+                delayChildren: 0.2
+            }
+        }
+    };
+
+    const itemVariants = {
+        hidden: { opacity: 0, y: 20 },
+        visible: { 
+            opacity: 1, 
+            y: 0,
+            transition: { duration: 0.5, ease: "easeOut" }
+        }
+    };
+
     if (loading) return (
         <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
-            <div className="w-12 h-12 border-4 border-eco-green/20 border-t-eco-green rounded-full animate-spin" />
+            <motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: "linear" }} className="w-12 h-12 border-4 border-eco-green/20 border-t-eco-green rounded-full" />
             <p className="text-[10px] font-black uppercase tracking-widest text-eco-green animate-pulse">Syncing Rankings...</p>
         </div>
     );
 
     return (
         <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
             className="flex flex-col gap-8 pb-12 max-w-5xl"
         >
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <motion.div variants={itemVariants} className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h2 className="text-2xl font-black uppercase tracking-tight text-text-light dark:text-text-dark">Eco Leaderboard</h2>
                     <p className="text-xs text-text-muted mt-1 uppercase tracking-widest opacity-60 font-bold">Global Sustainability Rankings</p>
@@ -61,17 +81,17 @@ const HallOfFame = () => {
                     <Globe size={14} className="text-eco-green" />
                     <span className="text-[10px] font-black uppercase tracking-widest text-eco-green">Worldwide Community</span>
                 </div>
-            </div>
+            </motion.div>
 
             {board.length === 0 ? (
-                <div className="neo-card p-16 text-center space-y-4">
+                <motion.div variants={itemVariants} className="neo-card p-16 text-center space-y-4">
                     <Trophy size={48} className="mx-auto text-text-muted opacity-20" />
                     <p className="font-bold text-text-muted">No rankings available yet.</p>
-                </div>
+                </motion.div>
             ) : (
                 <>
                     {/* Top 3 Podium */}
-                    <div className="flex flex-col md:flex-row items-end justify-center gap-6 mb-8 mt-12 px-4">
+                    <motion.div variants={itemVariants} className="flex flex-col md:flex-row items-end justify-center gap-6 mb-8 mt-12 px-4">
                         {[board[1], board[0], board[2]].map((entry, pos) => {
                             if (!entry) return <div key={pos} className="flex-1 hidden md:block" />;
                             const b = getBadge(entry.score);
@@ -85,12 +105,10 @@ const HallOfFame = () => {
                             return (
                                 <motion.div 
                                     key={pos} 
-                                    initial={{ opacity: 0, scale: 0.9 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    transition={{ delay: pos * 0.1 }}
+                                    whileHover={{ y: -10 }}
                                     className={`relative flex-1 group w-full ${entry.is_me ? 'z-20' : 'z-10'}`}
                                 >
-                                    <div className={`neo-card w-full ${heightClass} flex flex-col items-center justify-end pb-10 gap-5 border-b-[6px] shadow-2xl relative overflow-hidden transition-all duration-500 hover:translate-y-[-8px]`}
+                                    <div className={`neo-card w-full ${heightClass} flex flex-col items-center justify-end pb-10 gap-5 border-b-[6px] shadow-2xl relative overflow-hidden transition-all duration-500`}
                                         style={{ borderBottomColor: borderColor, boxShadow: `0 20px 40px -15px ${glowColor}` }}>
                                         
                                         <div className="absolute top-12 left-1/2 -translate-x-1/2 font-black text-[120px] opacity-[0.04] pointer-events-none italic" style={{ color: borderColor }}>
@@ -98,10 +116,13 @@ const HallOfFame = () => {
                                         </div>
 
                                         <div className="flex flex-col items-center gap-4 relative z-10 px-4 text-center">
-                                            <div className="w-16 h-16 rounded-3xl flex items-center justify-center border-2 shadow-inner transition-transform duration-700 group-hover:rotate-[360deg]"
+                                            <motion.div 
+                                                whileHover={{ rotate: 360 }}
+                                                transition={{ duration: 0.8 }}
+                                                className="w-16 h-16 rounded-3xl flex items-center justify-center border-2 shadow-inner"
                                                 style={{ background: b.bg, borderColor: b.border }}>
                                                 <BadgeIcon size={32} style={{ color: b.color }} />
-                                            </div>
+                                            </motion.div>
                                             
                                             <div className="space-y-1">
                                                 <h4 className={`font-black text-lg tracking-tight truncate max-w-[150px] ${entry.is_me ? 'text-eco-green' : 'text-text-light dark:text-text-dark'}`}>
@@ -129,10 +150,10 @@ const HallOfFame = () => {
                                 </motion.div>
                             );
                         })}
-                    </div>
+                    </motion.div>
 
                     {/* Full List */}
-                    <div className="neo-card shadow-xl overflow-hidden border-t-4 border-t-eco-green">
+                    <motion.div variants={itemVariants} className="neo-card shadow-xl overflow-hidden border-t-4 border-t-eco-green">
                         <div className="hidden sm:grid grid-cols-[80px_1fr_120px_200px] gap-6 px-10 py-6 border-b border-eco-border bg-gray-50/50 dark:bg-gray-900/30">
                             {['Rank', 'Environmentalist', 'Eco Score', 'Badge'].map(h => (
                                 <span key={h} className="text-[10px] font-black uppercase tracking-[0.25em] opacity-40">{h}</span>
@@ -144,7 +165,11 @@ const HallOfFame = () => {
                                 const Icon = b.icon;
                                 const isTop3 = i < 3;
                                 return (
-                                    <div key={i} className={`px-6 sm:px-10 py-5 transition-all duration-300 flex flex-col sm:grid sm:grid-cols-[80px_1fr_120px_200px] gap-4 sm:gap-6 items-center ${entry.is_me ? 'bg-eco-green/5' : 'hover:bg-gray-50/50 dark:hover:bg-gray-800/20'}`}>
+                                    <motion.div 
+                                        whileHover={{ x: 5 }}
+                                        key={i} 
+                                        className={`px-6 sm:px-10 py-5 transition-all duration-300 flex flex-col sm:grid sm:grid-cols-[80px_1fr_120px_200px] gap-4 sm:gap-6 items-center ${entry.is_me ? 'bg-eco-green/5' : 'hover:bg-gray-50/50 dark:hover:bg-gray-800/20'}`}
+                                    >
                                         <div className="flex items-center justify-between w-full sm:w-auto">
                                             <span className={`font-black italic text-lg sm:text-2xl ${isTop3 ? 'opacity-100' : 'opacity-30'}`} 
                                                 style={{ color: isTop3 ? rankColors[i] : 'inherit' }}>
@@ -181,15 +206,15 @@ const HallOfFame = () => {
                                             </div>
                                             <ChevronRight size={12} className="ml-auto text-text-muted opacity-30" />
                                         </div>
-                                    </div>
+                                    </motion.div>
                                 );
                             })}
                         </div>
-                    </div>
+                    </motion.div>
 
                     {/* Stats */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div className="neo-card p-6 border-l-4 border-eco-green flex items-center gap-4">
+                    <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <motion.div whileHover={{ scale: 1.02 }} className="neo-card p-6 border-l-4 border-eco-green flex items-center gap-4">
                             <div className="w-10 h-10 rounded-xl bg-eco-green/10 flex items-center justify-center text-eco-green">
                                 <Leaf size={20} />
                             </div>
@@ -197,8 +222,8 @@ const HallOfFame = () => {
                                 <p className="text-[10px] font-black uppercase tracking-widest text-text-muted">Total Offset</p>
                                 <h4 className="font-black text-xl tracking-tight">12,450 kg</h4>
                             </div>
-                        </div>
-                        <div className="neo-card p-6 border-l-4 border-analytics-blue flex items-center gap-4">
+                        </motion.div>
+                        <motion.div whileHover={{ scale: 1.02 }} className="neo-card p-6 border-l-4 border-analytics-blue flex items-center gap-4">
                             <div className="w-10 h-10 rounded-xl bg-analytics-blue/10 flex items-center justify-center text-analytics-blue">
                                 <Award size={20} />
                             </div>
@@ -206,8 +231,8 @@ const HallOfFame = () => {
                                 <p className="text-[10px] font-black uppercase tracking-widest text-text-muted">Active Heros</p>
                                 <h4 className="font-black text-xl tracking-tight">1,248</h4>
                             </div>
-                        </div>
-                        <div className="neo-card p-6 border-l-4 border-amber-500 flex items-center gap-4">
+                        </motion.div>
+                        <motion.div whileHover={{ scale: 1.02 }} className="neo-card p-6 border-l-4 border-amber-500 flex items-center gap-4">
                             <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500">
                                 <Star size={20} />
                             </div>
@@ -215,8 +240,8 @@ const HallOfFame = () => {
                                 <p className="text-[10px] font-black uppercase tracking-widest text-text-muted">Avg Eco Score</p>
                                 <h4 className="font-black text-xl tracking-tight">64.5</h4>
                             </div>
-                        </div>
-                    </div>
+                        </motion.div>
+                    </motion.div>
                 </>
             )}
         </motion.div>

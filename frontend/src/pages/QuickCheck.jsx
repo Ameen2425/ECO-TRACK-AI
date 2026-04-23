@@ -9,12 +9,12 @@ import {
 import { motion } from 'framer-motion';
 
 const TRANSPORT_TYPES = ['Petrol', 'Diesel', 'Electric', 'Bus', 'Bike', 'Walk'];
-const DIET_TYPES      = ['Vegan', 'Vegetarian', 'Non-Vegetarian'];
+const DIET_TYPES      = ['Vegan', 'Vegetarian', 'Eggetarian', 'Non-Veg'];
 
 const FACTORS = {
     petrol: 0.18, diesel: 0.17, electric: 0.05, bus: 0.03, bike: 0, walk: 0,
     electricity: 0.5, gas: 2.0,
-    vegan: 1.5, vegetarian: 2.5, 'non-vegetarian': 5.0,
+    vegan: 1.5, vegetarian: 2.5, eggetarian: 3.5, 'non-veg': 5.0,
     waste: 0.5,
 };
 
@@ -31,7 +31,7 @@ const QuickCheck = () => {
     const navigate  = useNavigate();
     const [form, setForm] = useState({
         km: '15', transport: 'petrol',
-        kwh: '8', diet: 'Non-Vegetarian',
+        kwh: '8', diet: 'Non-Veg',
         gas: '2', waste: '1',
     });
     const [loading, setLoading] = useState(false);
@@ -53,12 +53,12 @@ const QuickCheck = () => {
         setLoading(true);
         try {
             await axios.post('http://localhost:5000/api/emissions/add', {
-                transport_km:    form.km,
-                transport_type:  form.transport,
-                electricity_kwh: form.kwh,
-                diet_type:       form.diet,
-                gas_usage:       form.gas,
-                waste_kg:        form.waste,
+                transport_km:    f(form.km),
+                transport_type:  form.transport.toLowerCase(),
+                electricity_kwh: f(form.kwh),
+                diet_type:       form.diet.toLowerCase().replace('-', '_'),
+                gas_usage:       f(form.gas),
+                waste_kg:        f(form.waste),
                 entry_mode:      'quick',
             }, { headers: { Authorization: `Bearer ${token}` } });
             setSaved(true);
@@ -90,20 +90,40 @@ const QuickCheck = () => {
         </div>
     );
 
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: {
+                staggerChildren: 0.1,
+                delayChildren: 0.2
+            }
+        }
+    };
+
+    const itemVariants = {
+        hidden: { opacity: 0, y: 20 },
+        visible: { 
+            opacity: 1, 
+            y: 0,
+            transition: { duration: 0.5, ease: "easeOut" }
+        }
+    };
+
     return (
         <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
             className="max-w-5xl pb-12 flex flex-col gap-10"
         >
-            <div className="space-y-1">
+            <motion.div variants={itemVariants} className="space-y-1">
                 <h2 className="text-2xl font-inter font-black tracking-tight text-text-light dark:text-text-dark uppercase italic">Instant Analysis</h2>
                 <p className="text-[10px] font-medium opacity-50 uppercase tracking-widest">Rapidly estimate your daily carbon footprint and archive the result</p>
-            </div>
+            </motion.div>
 
             <div className="grid grid-cols-1 lg:grid-cols-[1fr_350px] gap-8 items-start">
-                <div className="neo-card p-10 flex flex-col gap-10 shadow-2xl relative overflow-hidden">
+                <motion.div variants={itemVariants} className="neo-card p-10 flex flex-col gap-10 shadow-2xl relative overflow-hidden">
                     <div className="absolute top-0 right-0 p-12 opacity-[0.02] pointer-events-none">
                         <Globe size={300} />
                     </div>
@@ -167,11 +187,11 @@ const QuickCheck = () => {
                             <Row label="Refuse Output" field="waste" unit="KG" step={0.5} />
                         </div>
                     </div>
-                </div>
+                </motion.div>
 
                 <div className="space-y-8 sticky top-8">
                     {/* Live Magnitude Card */}
-                    <div className="neo-card p-10 text-center relative overflow-hidden group shadow-2xl border-t-4 border-analytics-blue bg-white dark:bg-gray-900">
+                    <motion.div variants={itemVariants} className="neo-card p-10 text-center relative overflow-hidden group shadow-2xl border-t-4 border-analytics-blue bg-white dark:bg-gray-900">
                         <div className="absolute inset-0 bg-analytics-blue/5 opacity-0 group-hover:opacity-100 transition-opacity" />
                         <span className="text-[10px] font-black uppercase tracking-[0.3em] opacity-40">Live Magnitude</span>
                         <div className="font-inter font-black text-7xl tracking-tighter text-analytics-blue mt-6 mb-2 transition-transform duration-700 group-hover:scale-110 italic drop-shadow-2xl">
@@ -185,25 +205,25 @@ const QuickCheck = () => {
                                 {isGood ? 'Optimal Range' : 'Above Average'}
                             </span>
                         </div>
-                    </div>
+                    </motion.div>
 
                     <div className="grid grid-cols-2 gap-6">
-                        <div className="neo-card p-6 text-center shadow-lg border-l-4 border-eco-green">
+                        <motion.div variants={itemVariants} className="neo-card p-6 text-center shadow-lg border-l-4 border-eco-green">
                             <p className="text-[9px] font-black uppercase tracking-[0.2em] opacity-40">Eco Score</p>
                             <div className="font-inter font-black text-3xl tracking-tighter mt-1 italic" style={{ color: score > 60 ? '#16A34A' : '#2563EB' }}>
                                 {score}
                             </div>
-                        </div>
-                        <div className="neo-card p-6 text-center shadow-lg border-l-4 border-analytics-blue">
+                        </motion.div>
+                        <motion.div variants={itemVariants} className="neo-card p-6 text-center shadow-lg border-l-4 border-analytics-blue">
                             <p className="text-[9px] font-black uppercase tracking-[0.2em] opacity-40">Stability</p>
                             <div className={`font-inter font-black text-xs tracking-widest mt-3 flex items-center justify-center gap-2 ${saved ? 'text-eco-green' : 'text-text-muted'}`}>
                                 <div className={`w-1.5 h-1.5 rounded-full ${saved ? 'bg-eco-green animate-pulse shadow-[0_0_8px_rgba(22,163,74,0.5)]' : 'bg-gray-400'}`} />
                                 {saved ? 'STABLE' : 'PENDING'}
                             </div>
-                        </div>
+                        </motion.div>
                     </div>
 
-                    <div className="neo-card p-8 flex items-center gap-6 shadow-xl border-l-4 border-emerald-500">
+                    <motion.div variants={itemVariants} className="neo-card p-8 flex items-center gap-6 shadow-xl border-l-4 border-emerald-500">
                         <div className="w-14 h-14 rounded-2xl bg-emerald-50 dark:bg-emerald-950/20 flex items-center justify-center text-emerald-600 border border-emerald-100 dark:border-emerald-900/40 shadow-inner">
                             <Leaf size={28} />
                         </div>
@@ -213,22 +233,24 @@ const QuickCheck = () => {
                             </div>
                             <span className="text-[9px] font-black uppercase tracking-widest opacity-40">Nature Offset Node</span>
                         </div>
-                    </div>
+                    </motion.div>
 
-                    {!saved ? (
-                        <button onClick={handleSave} disabled={loading} className="btn-neo w-full py-5 justify-center shadow-2xl shadow-eco-green/20 group text-sm relative overflow-hidden bg-eco-green">
-                            <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
-                            <div className="relative z-10 flex items-center gap-3">
-                                {loading ? <Activity size={18} className="animate-spin" /> : <Target size={18} />}
-                                <span className="font-black uppercase tracking-[0.2em]">{loading ? 'Synthesizing...' : 'Commit to Archive'}</span>
-                            </div>
-                        </button>
-                    ) : (
-                        <button onClick={() => navigate('/dashboard')} className="btn-neo-outline w-full py-5 justify-center border-eco-green text-eco-green group text-sm">
-                            <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
-                            <span className="font-black uppercase tracking-[0.2em] ml-2">Open Terminal</span>
-                        </button>
-                    )}
+                    <motion.div variants={itemVariants}>
+                        {!saved ? (
+                            <button onClick={handleSave} disabled={loading} className="btn-neo w-full py-5 justify-center shadow-2xl shadow-eco-green/20 group text-sm relative overflow-hidden bg-eco-green">
+                                <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
+                                <div className="relative z-10 flex items-center gap-3">
+                                    {loading ? <Activity size={18} className="animate-spin" /> : <Target size={18} />}
+                                    <span className="font-black uppercase tracking-[0.2em]">{loading ? 'Synthesizing...' : 'Commit to Archive'}</span>
+                                </div>
+                            </button>
+                        ) : (
+                            <button onClick={() => navigate('/dashboard')} className="btn-neo-outline w-full py-5 justify-center border-eco-green text-eco-green group text-sm">
+                                <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                                <span className="font-black uppercase tracking-[0.2em] ml-2">Open Terminal</span>
+                            </button>
+                        )}
+                    </motion.div>
                 </div>
             </div>
         </motion.div>

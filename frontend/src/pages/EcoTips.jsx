@@ -58,18 +58,38 @@ const EcoTips = () => {
         }).catch(console.error).finally(() => setLoading(false));
     }, [token]);
 
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: {
+                staggerChildren: 0.1,
+                delayChildren: 0.2
+            }
+        }
+    };
+
+    const itemVariants = {
+        hidden: { opacity: 0, scale: 0.95 },
+        visible: { 
+            opacity: 1, 
+            scale: 1,
+            transition: { duration: 0.4, ease: "easeOut" }
+        }
+    };
+
     const prediction = dashData?.intelligence?.forecast?.predicted_30d_co2;
     const co2 = dashData?.latest?.footprint ?? 0;
     const treesNeeded = dashData?.intelligence?.offset?.trees_to_offset ?? 0;
 
     return (
         <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
             className="flex flex-col gap-8 pb-12 max-w-5xl"
         >
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <motion.div variants={itemVariants} className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h2 className="text-2xl font-black uppercase tracking-tight text-text-light dark:text-text-dark">Eco Intelligence</h2>
                     <p className="text-xs text-text-muted mt-1 uppercase tracking-widest opacity-60 font-bold">Personalized AI Insights & Sustainability Strategy</p>
@@ -78,12 +98,11 @@ const EcoTips = () => {
                     <Sparkles size={14} className="text-eco-green animate-pulse" />
                     <span className="text-[10px] font-black uppercase tracking-widest text-eco-green">AI Engine v2.0 Active</span>
                 </div>
-            </div>
+            </motion.div>
 
             {/* AI Insight Panels */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Forecast Card */}
-                <div className="neo-card p-8 group relative overflow-hidden shadow-xl border-analytics-blue/10 border-t-4 border-t-analytics-blue">
+                <motion.div variants={itemVariants} whileHover={{ y: -5 }} className="neo-card p-8 group relative overflow-hidden shadow-xl border-analytics-blue/10 border-t-4 border-t-analytics-blue">
                     <div className="absolute top-0 right-0 w-48 h-48 bg-analytics-blue/5 rounded-full blur-3xl -mr-24 -mt-24 group-hover:bg-analytics-blue/10 transition-all duration-700" />
                     <div className="flex items-center gap-3 mb-8">
                         <div className="w-10 h-10 rounded-xl bg-analytics-blue/10 border border-analytics-blue/20 flex items-center justify-center text-analytics-blue">
@@ -96,7 +115,7 @@ const EcoTips = () => {
                     </div>
                     {loading ? (
                         <div className="h-16 flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full border-2 border-analytics-blue/20 border-t-analytics-blue animate-spin" />
+                            <motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: "linear" }} className="w-8 h-8 rounded-full border-2 border-analytics-blue/20 border-t-analytics-blue" />
                             <p className="text-xs font-bold opacity-30 italic">Processing historical patterns...</p>
                         </div>
                     ) : (
@@ -114,10 +133,9 @@ const EcoTips = () => {
                             </div>
                         </div>
                     )}
-                </div>
+                </motion.div>
 
-                {/* Offset Card */}
-                <div className="neo-card p-8 group relative overflow-hidden shadow-xl border-eco-green/10 border-t-4 border-t-eco-green">
+                <motion.div variants={itemVariants} whileHover={{ y: -5 }} className="neo-card p-8 group relative overflow-hidden shadow-xl border-eco-green/10 border-t-4 border-t-eco-green">
                     <div className="absolute top-0 right-0 w-48 h-48 bg-eco-green/5 rounded-full blur-3xl -mr-24 -mt-24 group-hover:bg-eco-green/10 transition-all duration-700" />
                     <div className="flex items-center gap-3 mb-8">
                         <div className="w-10 h-10 rounded-xl bg-eco-green/10 border border-eco-green/20 flex items-center justify-center text-eco-green">
@@ -141,15 +159,14 @@ const EcoTips = () => {
                             </p>
                         </div>
                     </div>
-                </div>
+                </motion.div>
             </div>
 
             {/* AI Recommendations */}
             <AnimatePresence>
                 {aiTips.length > 0 && (
                     <motion.div 
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
+                        variants={itemVariants}
                         className="space-y-4"
                     >
                         <div className="flex items-center gap-3">
@@ -158,8 +175,11 @@ const EcoTips = () => {
                         </div>
                         <div className="grid grid-cols-1 gap-3">
                             {aiTips.map((tip, i) => (
-                                <div key={i} className="neo-card p-5 flex items-start gap-4 group hover:bg-analytics-blue/5 transition-all border-l-4 border-l-analytics-blue shadow-sm">
-                                    <div className="w-9 h-9 rounded-xl bg-analytics-blue/10 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                                <motion.div 
+                                    whileHover={{ x: 10 }}
+                                    key={i} className="neo-card p-5 flex items-start gap-4 group hover:bg-analytics-blue/5 transition-all border-l-4 border-l-analytics-blue shadow-sm"
+                                >
+                                    <div className="w-9 h-9 rounded-xl bg-analytics-blue/10 flex items-center justify-center shrink-0 transition-transform group-hover:scale-110">
                                         <Lightbulb size={18} className="text-analytics-blue" />
                                     </div>
                                     <div className="space-y-1">
@@ -169,7 +189,7 @@ const EcoTips = () => {
                                             <span className="text-[9px] font-black uppercase tracking-widest text-eco-green">Est. Save: {Math.floor(Math.random() * 5 + 1)} kg CO₂e</span>
                                         </div>
                                     </div>
-                                </div>
+                                </motion.div>
                             ))}
                         </div>
                     </motion.div>
@@ -178,13 +198,13 @@ const EcoTips = () => {
 
             {/* Static tips grid */}
             <div className="space-y-6 pt-4">
-                <div className="flex items-center justify-between">
+                <motion.div variants={itemVariants} className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <Zap size={16} className="text-eco-green" />
                         <h3 className="font-black text-xs uppercase tracking-[0.25em] text-text-muted">Foundation Sustainability Tips</h3>
                     </div>
                     <div className="h-[1px] flex-1 mx-6 bg-eco-border hidden sm:block" />
-                </div>
+                </motion.div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {STATIC_TIPS.map((tip, i) => (
                         <TipCard key={i} tip={tip} index={i} />
@@ -193,18 +213,18 @@ const EcoTips = () => {
             </div>
 
             {/* CTA */}
-            <div className="neo-card p-8 bg-gradient-to-r from-eco-green to-analytics-blue relative overflow-hidden group">
+            <motion.div variants={itemVariants} className="neo-card p-8 bg-gradient-to-r from-eco-green to-analytics-blue relative overflow-hidden group">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-32 -mt-32 group-hover:scale-110 transition-transform duration-1000" />
                 <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
                     <div className="space-y-2 text-center md:text-left">
                         <h3 className="text-xl font-black text-white uppercase tracking-tight">Become a Carbon Neutral Hero</h3>
                         <p className="text-white/70 text-[10px] uppercase font-black tracking-widest">Join our leaderboard and complete weekly challenges</p>
                     </div>
-                    <button className="px-8 py-3 bg-white text-eco-green font-black rounded-2xl shadow-xl hover:scale-105 transition-all text-[10px] uppercase tracking-widest">
+                    <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="px-8 py-3 bg-white text-eco-green font-black rounded-2xl shadow-xl transition-all text-[10px] uppercase tracking-widest">
                         Join Community →
-                    </button>
+                    </motion.button>
                 </div>
-            </div>
+            </motion.div>
         </motion.div>
     );
 };

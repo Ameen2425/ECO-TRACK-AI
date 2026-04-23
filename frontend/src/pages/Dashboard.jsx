@@ -91,32 +91,27 @@ const Dashboard = () => {
         }).then(r => setData(r.data)).catch(() => setData(null)).finally(() => setLoading(false));
     }, [token]);
 
-    const handleExport = async () => {
-        try {
-            const res = await axios.get('http://localhost:5000/api/emissions/history', { headers: { Authorization: `Bearer ${token}` } });
-            const exportData = res.data.map(item => ({
-                Date:              new Date(item.created_at).toLocaleDateString(),
-                'Transport (km)':  item.transport_km,
-                'Transport Type':  item.transport_type,
-                'Vehicle Brand':   item.vehicle_brand,
-                'Vehicle Model':   item.vehicle_model,
-                'Vehicle Year':    item.vehicle_year,
-                'Fuel Detail':     item.fuel_detail,
-                'Driving Cond.':   item.driving_condition,
-                'Actual Mileage':  item.actual_mileage,
-                'Ref. Mileage':    item.ref_mileage,
-                'Electricity kWh': item.electricity_kwh,
-                'Gas Usage':       item.gas_usage,
-                'Waste (kg)':      item.waste_kg,
-                'Diet Type':       item.diet_type,
-                'Family Size':     item.family_size,
-                'Total CO₂ (kg)':  item.total_co2,
-            }));
-            downloadCSV(exportData, 'EcoTrack_Premium_Export.csv');
-        } catch { alert("Export failed."); }
+    useEffect(() => { fetchData(); }, [fetchData, location.key]);
+
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: {
+                staggerChildren: 0.1,
+                delayChildren: 0.2
+            }
+        }
     };
 
-    useEffect(() => { fetchData(); }, [fetchData, location.key]);
+    const itemVariants = {
+        hidden: { opacity: 0, y: 20 },
+        visible: { 
+            opacity: 1, 
+            y: 0,
+            transition: { duration: 0.5, ease: "easeOut" }
+        }
+    };
 
     const latest       = data?.latest;
     const stats        = data?.stats;
@@ -125,6 +120,48 @@ const Dashboard = () => {
     const monthly      = data?.monthly;
     const co2          = latest?.footprint ?? 0;
     const score        = stats?.score ?? Math.max(0, Math.round(100 - (stats?.daily_avg ?? co2) * 2));
+
+    if (loading) return (
+        <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
+            <motion.div 
+                animate={{ rotate: 360 }}
+                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                className="w-12 h-12 border-4 border-eco-green/20 border-t-eco-green rounded-full" 
+            />
+            <motion.p 
+                animate={{ opacity: [0.4, 1, 0.4] }}
+                transition={{ duration: 1.5, repeat: Infinity }}
+                className="text-[10px] font-black uppercase tracking-widest text-eco-green"
+            >
+                Loading Intelligence...
+            </motion.p>
+        </div>
+    );
+
+    if (!data || !latest) {
+        return (
+            <motion.div 
+                initial={{ opacity: 0, scale: 0.9 }} 
+                animate={{ opacity: 1, scale: 1 }} 
+                className="flex flex-col items-center justify-center min-h-[500px] gap-8 text-center"
+            >
+                <motion.div 
+                    whileHover={{ rotate: 10, scale: 1.1 }}
+                    className="w-20 h-20 rounded-3xl bg-eco-green/10 flex items-center justify-center border border-eco-green/20"
+                >
+                    <Leaf size={36} className="text-eco-green" />
+                </motion.div>
+                <div className="space-y-2">
+                    <h3 className="font-black text-2xl tracking-tight text-text-light dark:text-text-dark">No Data Streams Found</h3>
+                    <p className="text-sm text-text-muted">Initialize your carbon tracking journey today.</p>
+                </div>
+                <Link to="/add-data" className="btn-neo px-8 py-3 shadow-lg shadow-eco-green/20">
+                    <PlusCircle size={16} /><span className="font-black uppercase tracking-widest text-[10px]">Add Entry</span>
+                </Link>
+            </motion.div>
+        );
+    }
+
     const history      = (data?.history ?? []).map(h => ({ date: h.date?.substring(0, 10), co2: h.footprint })).reverse();
     const suggestions  = data?.suggestions ?? [];
     const highestCat   = stats?.highest_category ?? '—';
@@ -151,37 +188,33 @@ const Dashboard = () => {
         'High Impact User':  'text-red-500 bg-red-500/10 border-red-500/20',
     };
 
-    if (loading) return (
-        <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
-            <div className="w-12 h-12 border-4 border-eco-green/20 border-t-eco-green rounded-full animate-spin" />
-            <p className="text-[10px] font-black uppercase tracking-widest text-eco-green animate-pulse">Loading Dashboard...</p>
-        </div>
-    );
-
-    if (!data || !latest) return (
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center justify-center min-h-[500px] gap-8 text-center">
-            <div className="w-20 h-20 rounded-3xl bg-eco-green/10 flex items-center justify-center border border-eco-green/20">
-                <Leaf size={36} className="text-eco-green" />
-            </div>
-            <div className="space-y-2">
-                <h3 className="font-black text-2xl tracking-tight text-text-light dark:text-text-dark">No data yet</h3>
-                <p className="text-sm text-text-muted">Start tracking your carbon footprint by adding your first emission record.</p>
-            </div>
-            <Link to="/add-data" className="btn-neo px-8 py-3 shadow-lg shadow-eco-green/20">
-                <PlusCircle size={16} /><span className="font-black uppercase tracking-widest text-[10px]">Add First Entry</span>
-            </Link>
-        </motion.div>
-    );
+    const handleExport = async () => {
+        try {
+            const res = await axios.get('http://localhost:5000/api/emissions/history', { headers: { Authorization: `Bearer ${token}` } });
+            const exportData = res.data.map(item => ({
+                Date:              new Date(item.created_at).toLocaleDateString(),
+                'Transport (km)':  item.transport_km,
+                'Transport Type':  item.transport_type,
+                'Total CO₂ (kg)':  item.total_co2,
+            }));
+            downloadCSV(exportData, 'EcoTrack_Export.csv');
+        } catch { alert("Export failed."); }
+    };
 
     return (
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="flex flex-col gap-6 pb-12">
+        <motion.div 
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            className="flex flex-col gap-6 pb-12"
+        >
 
             {/* Action Bar */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white/60 dark:bg-gray-900/50 backdrop-blur-sm p-3 rounded-2xl border border-eco-border gap-3">
+            <motion.div variants={itemVariants} className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white/60 dark:bg-gray-900/50 backdrop-blur-sm p-3 rounded-2xl border border-eco-border gap-3">
                 <div className="flex items-center gap-3 flex-wrap">
                     <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-eco-green/10 border border-eco-green/20">
                         <div className="w-1.5 h-1.5 rounded-full bg-eco-green animate-pulse" />
-                        <span className="text-[9px] font-black uppercase tracking-widest text-eco-green">Live Analysis</span>
+                        <span className="text-[9px] font-black uppercase tracking-widest text-eco-green">Intelligence Active</span>
                     </div>
                     {profileType && (
                         <span className={`px-3 py-1 rounded-xl text-[9px] font-black uppercase tracking-widest border ${PROFILE_COLORS[profileType] || 'text-text-muted bg-gray-100 border-eco-border'}`}>
@@ -190,201 +223,78 @@ const Dashboard = () => {
                     )}
                 </div>
                 <div className="flex items-center gap-2 w-full sm:w-auto">
-                    <button onClick={fetchData} className="w-9 h-9 rounded-xl bg-white dark:bg-gray-800 border border-eco-border flex items-center justify-center text-text-muted hover:text-eco-green transition-all">
+                    <motion.button whileHover={{ rotate: 180 }} transition={{ duration: 0.5 }} onClick={fetchData} className="w-9 h-9 rounded-xl bg-white dark:bg-gray-800 border border-eco-border flex items-center justify-center text-text-muted hover:text-eco-green transition-all">
                         <RefreshCw size={15} className={loading ? 'animate-spin' : ''} />
-                    </button>
-                    <button onClick={handleExport} className="flex-1 sm:flex-none btn-neo px-5 py-2 bg-eco-green text-white shadow-lg shadow-eco-green/20 text-[10px]">
-                        <Download size={14} /> Export CSV
-                    </button>
-                    <Link to="/add-data" className="flex-1 sm:flex-none btn-neo px-5 py-2 shadow-lg text-[10px]">
-                        <PlusCircle size={14} /> Add Entry
-                    </Link>
+                    </motion.button>
+                    <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={handleExport} className="flex-1 sm:flex-none btn-neo px-5 py-2 bg-eco-green text-white shadow-lg shadow-eco-green/20 text-[10px]">
+                        <Download size={14} /> Export
+                    </motion.button>
+                    <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="flex-1 sm:flex-none">
+                        <Link to="/add-data" className="btn-neo px-5 py-2 shadow-lg text-[10px] block text-center">
+                            <PlusCircle size={14} /> Add Entry
+                        </Link>
+                    </motion.div>
                 </div>
-            </div>
+            </motion.div>
 
             {/* Metrics Row */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <MetricCard label="Total Footprint"      value={co2.toFixed(1)}            unit="kg CO₂e"  icon={Leaf}         color="green" description="Latest entry" />
-                <MetricCard label="Sustainability Score" value={score}                      unit="pts"      icon={Target}       color="green" description="Performance index" />
-                <MetricCard label="Trees to Offset"      value={intelligence?.offset?.trees_to_offset ?? 0} unit="trees" icon={Globe} color="blue"  description="Annual offset needed" />
-                <MetricCard label="Top Emission Source"  value={highestCat}                 unit=""         icon={Flame}        color="blue"  description="Highest impact category" />
+                <motion.div variants={itemVariants}><MetricCard label="Total Footprint" value={co2.toFixed(1)} unit="kg" icon={Leaf} color="green" /></motion.div>
+                <motion.div variants={itemVariants}><MetricCard label="Eco Score" value={score} unit="pts" icon={Target} color="green" /></motion.div>
+                <motion.div variants={itemVariants}><MetricCard label="Annual Offset" value={intelligence?.offset?.trees_to_offset ?? 0} unit="trees" icon={Globe} color="blue" /></motion.div>
+                <motion.div variants={itemVariants}><MetricCard label="Main Impact" value={highestCat} unit="" icon={Flame} color="blue" /></motion.div>
             </div>
-
-            {/* Weekly / Monthly summary */}
-            {(weekly || monthly) && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    {weekly && <MetricCard label="This Week" value={weekly.this_week.toFixed(1)} unit="kg" icon={Activity} color="green" trend={weekly.change_pct} description={weekly.improved ? 'Improved vs last week' : 'Increased vs last week'} />}
-                    {weekly && <MetricCard label="Last Week"  value={weekly.last_week.toFixed(1)} unit="kg" icon={BarChart3} color="blue" description="Previous 7-day total" />}
-                    {monthly && <MetricCard label="This Month" value={monthly.this_month.toFixed(1)} unit="kg" icon={TrendingDown} color="green" trend={monthly.change_pct} description={monthly.improved ? 'Improved vs last month' : 'Increased vs last month'} />}
-                    {monthly && <MetricCard label="Last Month" value={monthly.last_month.toFixed(1)} unit="kg" icon={BarChart3} color="blue" description="Previous month total" />}
-                </div>
-            )}
-
-            {/* Insights */}
-            {(weekly || monthly) && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {weekly && (
-                        <InsightBanner
-                            icon={weekly.improved ? TrendingDown : TrendingUp}
-                            color={weekly.improved ? '#16A34A' : '#EF4444'}
-                            text={weekly.improved
-                                ? `You improved by ${Math.abs(weekly.change_pct)}% this week! Keep it up.`
-                                : `Your emissions increased by ${Math.abs(weekly.change_pct)}% this week. Consider reducing ${highestCat} usage.`}
-                        />
-                    )}
-                    <InsightBanner icon={Flame} color="#F59E0B" text={`${highestCat} contributes the most to your emissions. Focus here for maximum impact.`} />
-                </div>
-            )}
 
             {/* Charts Row */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Area chart */}
-                <div className="lg:col-span-2 neo-card p-5 md:p-8 flex flex-col gap-5">
+                <motion.div variants={itemVariants} className="lg:col-span-2 neo-card p-5 md:p-8 flex flex-col gap-5">
                     <div className="flex items-center justify-between">
-                        <div>
-                            <h3 className="text-sm font-black uppercase tracking-widest">Emission Trend</h3>
-                            <p className="text-[9px] text-text-muted uppercase tracking-widest mt-0.5">Historical CO₂ footprint</p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <div className="w-2 h-2 rounded-full bg-analytics-blue" />
-                            <span className="text-[9px] font-bold opacity-50 uppercase">CO₂e</span>
-                        </div>
+                        <h3 className="text-sm font-black uppercase tracking-widest">Emission Trajectory</h3>
+                        <Activity size={16} className="text-analytics-blue" />
                     </div>
                     <div className="h-56 sm:h-64 w-full">
                         <ResponsiveContainer width="100%" height="100%">
                             <AreaChart data={history}>
                                 <defs>
                                     <linearGradient id="areaBlue" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%"  stopColor="#2563EB" stopOpacity={0.25} />
+                                        <stop offset="5%" stopColor="#2563EB" stopOpacity={0.25} />
                                         <stop offset="95%" stopColor="#2563EB" stopOpacity={0} />
                                     </linearGradient>
                                 </defs>
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" opacity={0.3} />
                                 <XAxis dataKey="date" hide />
                                 <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: 'var(--text-muted)' }} />
-                                <Tooltip contentStyle={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12, fontSize: 11 }} />
-                                <Area type="monotone" dataKey="co2" stroke="#2563EB" strokeWidth={2.5} fillOpacity={1} fill="url(#areaBlue)" />
+                                <Tooltip contentStyle={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12 }} />
+                                <Area type="monotone" dataKey="co2" stroke="#2563EB" strokeWidth={2.5} fill="url(#areaBlue)" animationDuration={1500} />
                             </AreaChart>
                         </ResponsiveContainer>
                     </div>
-                </div>
+                </motion.div>
 
-                {/* Pie chart */}
-                <div className="neo-card p-5 md:p-8 flex flex-col gap-5">
-                    <div>
-                        <h3 className="text-sm font-black uppercase tracking-widest">Source Breakdown</h3>
-                        <p className="text-[9px] text-text-muted uppercase tracking-widest mt-0.5">By category</p>
-                    </div>
-                    <div className="flex-1 flex flex-col justify-center gap-6">
-                        <div className="h-44 w-full">
-                            <ResponsiveContainer width="100%" height="100%">
-                                <PieChart>
-                                    <Pie data={pieData} innerRadius={48} outerRadius={68} paddingAngle={6} dataKey="value" stroke="none">
-                                        {pieData.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
-                                    </Pie>
-                                    <Tooltip contentStyle={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12, fontSize: 11 }} />
-                                </PieChart>
-                            </ResponsiveContainer>
-                        </div>
-                        <div className="grid grid-cols-2 gap-2">
-                            {pieData.map((d, i) => (
-                                <div key={d.name} className="flex items-center gap-2">
-                                    <div className="w-2 h-2 rounded-full shrink-0" style={{ background: PIE_COLORS[i] }} />
-                                    <span className="text-[9px] font-black uppercase tracking-widest text-text-muted truncate">{d.name}</span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* Weekly Bar Chart */}
-            {barData.length > 0 && (
-                <div className="neo-card p-5 md:p-8 space-y-5">
-                    <div>
-                        <h3 className="text-sm font-black uppercase tracking-widest">Weekly Comparison</h3>
-                        <p className="text-[9px] text-text-muted mt-0.5">This week vs. last week</p>
-                    </div>
-                    <div className="h-36 w-full">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={barData} barSize={40}>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" opacity={0.3} />
-                                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: 'var(--text-muted)' }} />
-                                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: 'var(--text-muted)' }} />
-                                <Tooltip contentStyle={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12, fontSize: 11 }} />
-                                <Bar dataKey="co2" name="CO₂ (kg)" radius={[6, 6, 0, 0]}>
-                                    {barData.map((_, i) => <Cell key={i} fill={i === 1 ? '#16A34A' : '#2563EB'} />)}
-                                </Bar>
-                            </BarChart>
-                        </ResponsiveContainer>
-                    </div>
-                </div>
-            )}
-
-            {/* Bottom insight cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                {/* Goal Progress */}
-                <div className="neo-card p-5 flex flex-col gap-5">
-                    <div className="flex items-center justify-between">
-                        <Target size={16} className="text-eco-green" />
-                        <span className="text-[9px] font-black uppercase tracking-widest text-eco-green bg-eco-green/10 px-2 py-1 rounded-lg">Active</span>
-                    </div>
-                    <div>
-                        <h4 className="font-bold text-sm tracking-tight mb-1">Monthly Reduction</h4>
-                        <p className="text-[9px] text-text-muted">Target: 20% decrease</p>
-                    </div>
-                    <div className="space-y-2">
-                        <div className="h-1.5 w-full bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
-                            <div className="h-full bg-eco-green w-[72%] shadow-[0_0_8px_rgba(22,163,74,0.4)]" />
-                        </div>
-                        <span className="text-[9px] font-black text-text-muted block text-right uppercase tracking-widest">72% Completed</span>
-                    </div>
-                </div>
-
-                {/* Score Ring */}
-                <div className="neo-card p-5 flex flex-col items-center gap-4">
-                    <h4 className="font-black text-xs uppercase tracking-widest opacity-40 self-start">Sustainability Score</h4>
+                <motion.div variants={itemVariants} className="neo-card p-5 md:p-8 flex flex-col gap-5 text-center items-center justify-center">
+                    <h4 className="font-black text-xs uppercase tracking-widest opacity-40 self-start">Eco Efficiency</h4>
                     <ScoreRing score={score} />
-                    <div className="text-center">
-                        <p className="text-[9px] font-black text-text-muted uppercase tracking-widest">
-                            {intelligence?.classification?.label ?? 'Calculating...'}
-                        </p>
-                    </div>
-                </div>
-
-                {/* AI Recommendation */}
-                <div className="neo-card p-5 flex flex-col gap-4">
-                    <div className="w-9 h-9 rounded-xl bg-analytics-blue/10 flex items-center justify-center text-analytics-blue border border-analytics-blue/20">
-                        <Zap size={16} />
-                    </div>
-                    <div>
-                        <h4 className="font-bold text-sm tracking-tight">AI Recommendation</h4>
-                        <p className="text-[9px] text-text-muted leading-relaxed mt-1">
-                            {suggestions[0] || `Your ${highestCat} emissions are your highest source. Reducing it by 20% would save significant CO₂ this month.`}
-                        </p>
-                    </div>
-                    <Link to="/tips" className="text-[9px] font-black text-analytics-blue uppercase tracking-widest hover:underline mt-auto">View All Tips →</Link>
-                </div>
+                    <p className="text-[10px] font-black text-eco-green uppercase tracking-widest mt-4">
+                        {intelligence?.classification?.label ?? 'Optimizing...'}
+                    </p>
+                </motion.div>
             </div>
 
-            {/* Quick Links */}
+            {/* Quick Actions */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {[
-                    { to: '/add-data', icon: PlusCircle, label: 'Add New Entry', sub: 'Log today\'s activities', color: 'eco-green' },
-                    { to: '/reports',  icon: BarChart3,  label: 'Analytics',      sub: 'Deep insights & trends',  color: 'analytics-blue' },
-                    { to: '/leaderboard', icon: Trophy,  label: 'Leaderboard',    sub: 'Compare with community',  color: 'amber-500' },
-                ].map(({ to, icon: Icon, label, sub, color }) => (
-                    <Link key={to} to={to} className={`neo-card p-5 flex items-center justify-between group hover:border-${color} active:scale-95 transition-all`}>
-                        <div className="flex items-center gap-3">
-                            <div className={`w-10 h-10 rounded-xl bg-${color}/10 flex items-center justify-center text-${color} group-hover:bg-${color} group-hover:text-white transition-all`}>
+                    { to: '/add-data', icon: PlusCircle, label: 'Add Entry', color: 'eco-green' },
+                    { to: '/reports',  icon: BarChart3,  label: 'Analytics', color: 'analytics-blue' },
+                    { to: '/hall-of-fame', icon: Trophy, label: 'Hall of Fame', color: 'amber-500' },
+                ].map(({ to, icon: Icon, label, color }) => (
+                    <motion.div key={to} variants={itemVariants} whileHover={{ y: -4 }} whileTap={{ scale: 0.98 }}>
+                        <Link to={to} className="neo-card p-5 flex items-center gap-4 group hover:border-eco-green/50 transition-all">
+                            <div className={`w-10 h-10 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-text-muted group-hover:bg-eco-green group-hover:text-white transition-all`}>
                                 <Icon size={18} />
                             </div>
-                            <div>
-                                <h4 className="text-sm font-bold tracking-tight">{label}</h4>
-                                <p className="text-[9px] opacity-50">{sub}</p>
-                            </div>
-                        </div>
-                    </Link>
+                            <h4 className="text-sm font-bold tracking-tight uppercase tracking-widest">{label}</h4>
+                        </Link>
+                    </motion.div>
                 ))}
             </div>
         </motion.div>

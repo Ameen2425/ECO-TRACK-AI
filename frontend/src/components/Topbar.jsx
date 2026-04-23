@@ -51,7 +51,8 @@ const Topbar = ({ onMenuClick }) => {
     const initials = (user?.username || user?.name || 'A').split(' ').map(n => n[0]?.toUpperCase()).join('').slice(0, 2);
 
     return (
-        <header className="sticky top-0 right-0 h-16 bg-background-light/90 dark:bg-background-dark/90 backdrop-blur-md border-b border-eco-border z-40 px-4 md:px-6 flex items-center justify-between transition-all duration-500">
+        <header className="sticky top-0 z-[40] w-full bg-white/60 dark:bg-[#0F172A]/60 backdrop-blur-2xl border-b border-eco-border/40 px-4 md:px-8 py-3">
+            <div className="max-w-[1600px] mx-auto flex items-center justify-between">
             {/* Left */}
             <div className="flex items-center gap-3 flex-1 min-w-0">
                 <button
@@ -233,7 +234,8 @@ const Topbar = ({ onMenuClick }) => {
                     </AnimatePresence>
                 </div>
             </div>
-        </header>
+        </div>
+    </header>
     );
 };
 

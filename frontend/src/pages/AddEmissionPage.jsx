@@ -209,6 +209,26 @@ const AddEmissionPage = () => {
     const [dData, setDData]         = useState({ ...D_DEFAULTS });
     const navigate = useNavigate();
 
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: {
+                staggerChildren: 0.1,
+                delayChildren: 0.2
+            }
+        }
+    };
+
+    const itemVariants = {
+        hidden: { opacity: 0, y: 20 },
+        visible: { 
+            opacity: 1, 
+            y: 0,
+            transition: { duration: 0.5, ease: "easeOut" }
+        }
+    };
+
     const cat    = categories[activeIdx];
     const CatIcon= cat.icon;
     const isQuick= mode === 'quick';
@@ -570,13 +590,19 @@ const AddEmissionPage = () => {
             {/* Layout: vertical nav + main panel */}
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
                 {/* Category Nav */}
-                <div className="lg:col-span-1 flex lg:flex-col gap-2 overflow-x-auto lg:overflow-visible pb-2 lg:pb-0 no-scrollbar">
+                <motion.div 
+                    variants={containerVariants}
+                    className="lg:col-span-1 flex lg:flex-col gap-2 overflow-x-auto lg:overflow-visible pb-2 lg:pb-0 no-scrollbar"
+                >
                     {categories.map((c, idx) => {
                         const TabIcon = c.icon;
                         const active    = idx === activeIdx;
                         const completed = idx < activeIdx;
                         return (
-                            <button
+                            <motion.button
+                                variants={itemVariants}
+                                whileHover={{ x: 4 }}
+                                whileTap={{ scale: 0.98 }}
                                 key={c.id} type="button"
                                 onClick={() => setActiveIdx(idx)}
                                 className={`shrink-0 lg:w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all border text-left min-w-[130px] lg:min-w-0 ${
@@ -592,10 +618,10 @@ const AddEmissionPage = () => {
                                     <p className={`text-[11px] font-bold ${active ? 'text-text-light dark:text-text-dark' : 'text-text-muted'}`}>{c.name}</p>
                                     {active && <p className="text-[9px] text-eco-green font-black uppercase tracking-widest mt-0.5">Active</p>}
                                 </div>
-                            </button>
+                            </motion.button>
                         );
                     })}
-                </div>
+                </motion.div>
 
                 {/* Main Card */}
                 <div className="lg:col-span-3">
@@ -605,7 +631,7 @@ const AddEmissionPage = () => {
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: -20 }}
-                            transition={{ duration: 0.25 }}
+                            transition={{ duration: 0.3, ease: "circOut" }}
                             className="neo-card p-6 md:p-10 relative overflow-hidden"
                         >
                             {/* Bg ornament */}
@@ -613,7 +639,7 @@ const AddEmissionPage = () => {
 
                             <div className="relative z-10 space-y-8">
                                 {/* Panel header */}
-                                <div className="flex items-center gap-4">
+                                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-4">
                                     <div className="w-14 h-14 rounded-2xl flex items-center justify-center shadow-inner" style={{ background: cat.bg, border: `1px solid ${cat.border}` }}>
                                         <CatIcon size={28} style={{ color: cat.color }} />
                                     </div>
@@ -626,31 +652,43 @@ const AddEmissionPage = () => {
                                         </h3>
                                         <p className="text-[10px] text-text-muted mt-0.5">{cat.description}</p>
                                     </div>
-                                </div>
+                                </motion.div>
 
                                 {/* Form content */}
-                                <div className="bg-gray-50/30 dark:bg-black/10 p-6 rounded-2xl border border-eco-border/40">
+                                <motion.div 
+                                    initial={{ opacity: 0, scale: 0.98 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    transition={{ delay: 0.1 }}
+                                    className="bg-gray-50/30 dark:bg-black/10 p-6 rounded-2xl border border-eco-border/40"
+                                >
                                     {isQuick ? <QuickPanel /> : <DetailedPanel />}
-                                </div>
+                                </motion.div>
 
                                 {/* Navigation */}
                                 <div className="flex items-center justify-between pt-2">
-                                    <button
+                                    <motion.button
+                                        whileHover={{ x: -4 }}
                                         type="button"
                                         onClick={() => setActiveIdx(i => i - 1)}
                                         disabled={activeIdx === 0}
                                         className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-widest transition-all ${activeIdx === 0 ? 'opacity-0 pointer-events-none' : 'text-text-muted hover:text-text-light dark:hover:text-text-dark'}`}
                                     >
                                         <ChevronLeft size={14} /> Previous
-                                    </button>
+                                    </motion.button>
 
                                     <div className="flex gap-1.5">
                                         {categories.map((_, i) => (
-                                            <div key={i} className={`h-1.5 rounded-full transition-all duration-400 ${i === activeIdx ? 'w-6 bg-eco-green' : i < activeIdx ? 'w-2 bg-eco-green/40' : 'w-2 bg-gray-200 dark:bg-gray-700'}`} />
+                                            <motion.div 
+                                                key={i} 
+                                                animate={{ width: i === activeIdx ? 24 : 8 }}
+                                                className={`h-1.5 rounded-full transition-all duration-400 ${i === activeIdx ? 'bg-eco-green' : i < activeIdx ? 'bg-eco-green/40' : 'bg-gray-200 dark:bg-gray-700'}`} 
+                                            />
                                         ))}
                                     </div>
 
-                                    <button
+                                    <motion.button
+                                        whileHover={{ scale: 1.05 }}
+                                        whileTap={{ scale: 0.95 }}
                                         type="button"
                                         onClick={handleNext}
                                         className="btn-neo px-8 gap-2 shadow-lg shadow-eco-green/20 group"
@@ -659,7 +697,7 @@ const AddEmissionPage = () => {
                                             {activeIdx === categories.length - 1 ? 'Calculate Now' : 'Next Step'}
                                         </span>
                                         <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-                                    </button>
+                                    </motion.button>
                                 </div>
                             </div>
                         </motion.div>

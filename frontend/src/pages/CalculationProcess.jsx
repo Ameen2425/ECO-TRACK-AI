@@ -38,6 +38,26 @@ const CalculationProcess = () => {
     const { token, logout } = useAuth();
     const hasRun = React.useRef(false);
 
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: {
+                staggerChildren: 0.1,
+                delayChildren: 0.2
+            }
+        }
+    };
+
+    const itemVariants = {
+        hidden: { opacity: 0, y: 20 },
+        visible: { 
+            opacity: 1, 
+            y: 0,
+            transition: { duration: 0.5, ease: "easeOut" }
+        }
+    };
+
     useEffect(() => {
         if (!token || hasRun.current) return;
         hasRun.current = true;
@@ -191,41 +211,51 @@ const CalculationProcess = () => {
                                     <h3 className="font-black text-sm uppercase tracking-widest text-text-light dark:text-text-dark">Step-by-Step Breakdown</h3>
                                     <p className="text-[10px] text-text-muted mt-1">Per-category emission calculation details</p>
                                 </div>
-                                <div className="space-y-4">
+                                <motion.div variants={containerVariants} initial="hidden" animate="visible" className="space-y-4">
                                     {breakdown.transport && (
-                                        <FormulaCard
-                                            label="🚗 Transport"
-                                            color="#16A34A"
-                                            value={breakdown.transport.co2}
-                                            formula={breakdown.transport.formula}
-                                            detail={breakdown.transport.vehicle_brand 
-                                                ? `${breakdown.transport.vehicle_brand} ${breakdown.transport.vehicle_model} (${breakdown.transport.vehicle_year}) · ${breakdown.transport.fuel_detail.toUpperCase()} · ${breakdown.transport.km} km · ${breakdown.transport.driving_condition.toUpperCase()} (${breakdown.transport.condition_multiplier}x) · Efficiency (${breakdown.transport.efficiency_multiplier}x)` 
-                                                : breakdown.transport.vehicle_model
-                                                    ? `${breakdown.transport.vehicle_model} · ${breakdown.transport.fuel_detail} · ${breakdown.transport.vehicle_age_years}y old · ×${breakdown.transport.age_multiplier} multiplier`
-                                                    : `${breakdown.transport.fuel_detail} · ×${breakdown.transport.age_multiplier} age multiplier`}
-                                        />
+                                        <motion.div variants={itemVariants}>
+                                            <FormulaCard
+                                                label="🚗 Transport"
+                                                color="#16A34A"
+                                                value={breakdown.transport.co2}
+                                                formula={breakdown.transport.formula}
+                                                detail={breakdown.transport.vehicle_brand 
+                                                    ? `${breakdown.transport.vehicle_brand} ${breakdown.transport.vehicle_model} (${breakdown.transport.vehicle_year}) · ${breakdown.transport.fuel_detail.toUpperCase()} · ${breakdown.transport.km} km · ${breakdown.transport.driving_condition.toUpperCase()} (${breakdown.transport.condition_multiplier}x) · Efficiency (${breakdown.transport.efficiency_multiplier}x)` 
+                                                    : breakdown.transport.vehicle_model
+                                                        ? `${breakdown.transport.vehicle_model} · ${breakdown.transport.fuel_detail} · ${breakdown.transport.vehicle_age_years}y old · ×${breakdown.transport.age_multiplier} multiplier`
+                                                        : `${breakdown.transport.fuel_detail} · ×${breakdown.transport.age_multiplier} age multiplier`}
+                                            />
+                                        </motion.div>
                                     )}
                                     {breakdown.electricity && (
-                                        <FormulaCard label="⚡ Electricity" color="#2563EB" value={breakdown.electricity.co2} formula={breakdown.electricity.formula} />
+                                        <motion.div variants={itemVariants}>
+                                            <FormulaCard label="⚡ Electricity" color="#2563EB" value={breakdown.electricity.co2} formula={breakdown.electricity.formula} />
+                                        </motion.div>
                                     )}
                                     {breakdown.gas && (
-                                        <FormulaCard label="🔥 Gas & Cooking" color="#059669" value={breakdown.gas.co2} formula={breakdown.gas.formula} />
+                                        <motion.div variants={itemVariants}>
+                                            <FormulaCard label="🔥 Gas & Cooking" color="#059669" value={breakdown.gas.co2} formula={breakdown.gas.formula} />
+                                        </motion.div>
                                     )}
                                     {breakdown.waste && (
-                                        <FormulaCard
-                                            label="🗑️ Waste"
-                                            color="#0284C7"
-                                            value={breakdown.waste.co2}
-                                            formula={breakdown.waste.formula}
-                                            detail={breakdown.waste.recycling_reduction > 0 ? `Recycling/composting reduced emissions by ${(breakdown.waste.recycling_reduction * 100).toFixed(0)}%` : ''}
-                                        />
+                                        <motion.div variants={itemVariants}>
+                                            <FormulaCard
+                                                label="🗑️ Waste"
+                                                color="#0284C7"
+                                                value={breakdown.waste.co2}
+                                                formula={breakdown.waste.formula}
+                                                detail={breakdown.waste.recycling_reduction > 0 ? `Recycling/composting reduced emissions by ${(breakdown.waste.recycling_reduction * 100).toFixed(0)}%` : ''}
+                                            />
+                                        </motion.div>
                                     )}
                                     {breakdown.diet && (
-                                        <FormulaCard label="🥗 Food & Diet" color="#10B981" value={breakdown.diet.co2} formula={breakdown.diet.formula} />
+                                        <motion.div variants={itemVariants}>
+                                            <FormulaCard label="🥗 Food & Diet" color="#10B981" value={breakdown.diet.co2} formula={breakdown.diet.formula} />
+                                        </motion.div>
                                     )}
-                                </div>
+                                </motion.div>
 
-                                <div className="p-4 rounded-2xl bg-eco-green/5 border border-eco-green/10">
+                                <motion.div variants={itemVariants} className="p-4 rounded-2xl bg-eco-green/5 border border-eco-green/10">
                                     <div className="flex items-center justify-between">
                                         <span className="text-[10px] font-black uppercase tracking-widest text-eco-green">Total CO₂ Formula</span>
                                         <span className="font-black text-eco-green">{result.total_co2.toFixed(2)} kg</span>
@@ -233,7 +263,7 @@ const CalculationProcess = () => {
                                     <code className="block font-mono text-[10px] text-text-muted mt-2">
                                         Total = Transport + Electricity + Gas + Waste + Diet
                                     </code>
-                                </div>
+                                </motion.div>
                             </div>
                         )}
 

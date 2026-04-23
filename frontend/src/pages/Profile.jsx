@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
     User, Camera, Mail, Phone, AtSign, Key, Eye, EyeOff,
     Shield, CheckCircle, Loader, Leaf, Trophy, Activity, Target
@@ -62,6 +62,26 @@ const Profile = () => {
 
     useEffect(() => { fetchProfile(); }, [fetchProfile]);
 
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: {
+                staggerChildren: 0.1,
+                delayChildren: 0.2
+            }
+        }
+    };
+
+    const itemVariants = {
+        hidden: { opacity: 0, y: 20 },
+        visible: { 
+            opacity: 1, 
+            y: 0,
+            transition: { duration: 0.5, ease: "easeOut" }
+        }
+    };
+
     const handleSave = async () => {
         if (form.newPassword && form.newPassword !== form.confirmPassword) {
             setMsg({ type: 'error', text: 'New passwords do not match.' });
@@ -111,7 +131,7 @@ const Profile = () => {
 
     if (loading) return (
         <div className="flex items-center justify-center min-h-[400px] gap-4">
-            <div className="w-10 h-10 border-4 border-eco-green/20 border-t-eco-green rounded-full animate-spin" />
+            <motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: "linear" }} className="w-10 h-10 border-4 border-eco-green/20 border-t-eco-green rounded-full" />
         </div>
     );
 
@@ -133,23 +153,31 @@ const Profile = () => {
     ];
 
     return (
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="flex flex-col gap-6 pb-12 max-w-4xl">
+        <motion.div 
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            className="flex flex-col gap-6 pb-12 max-w-4xl"
+        >
 
             {/* Status message */}
-            {msg.text && (
-                <motion.div
-                    initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-2xl border text-sm font-medium ${msg.type === 'success' ? 'bg-eco-green/10 border-eco-green/20 text-eco-green' : 'bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-800/30 text-red-500'}`}
-                >
-                    <CheckCircle size={16} className="shrink-0" />
-                    {msg.text}
-                </motion.div>
-            )}
+            <AnimatePresence mode="wait">
+                {msg.text && (
+                    <motion.div
+                        key={msg.text}
+                        initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
+                        className={`flex items-center gap-3 px-4 py-3 rounded-2xl border text-sm font-medium ${msg.type === 'success' ? 'bg-eco-green/10 border-eco-green/20 text-eco-green' : 'bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-800/30 text-red-500'}`}
+                    >
+                        <CheckCircle size={16} className="shrink-0" />
+                        {msg.text}
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* Profile hero card */}
-            <div className="neo-card p-6 md:p-8 flex flex-col md:flex-row gap-6 items-center md:items-start shadow-sm border-t-4 border-eco-green">
+            <motion.div variants={itemVariants} className="neo-card p-6 md:p-8 flex flex-col md:flex-row gap-6 items-center md:items-start shadow-sm border-t-4 border-eco-green">
                 {/* Avatar */}
-                <div className="relative shrink-0">
+                <motion.div whileHover={{ scale: 1.05 }} className="relative shrink-0">
                     <div className="w-24 h-24 rounded-3xl bg-eco-green/10 border-2 border-eco-green/20 overflow-hidden flex items-center justify-center shadow-lg">
                         {imgUrl ? (
                             <img src={imgUrl} alt="avatar" className="w-full h-full object-cover" />
@@ -157,11 +185,11 @@ const Profile = () => {
                             <User size={36} className="text-eco-green" />
                         )}
                     </div>
-                    <label className="absolute -bottom-2 -right-2 w-8 h-8 rounded-xl bg-eco-green text-white flex items-center justify-center cursor-pointer shadow-lg hover:scale-105 transition-transform">
+                    <label className="absolute -bottom-2 -right-2 w-8 h-8 rounded-xl bg-eco-green text-white flex items-center justify-center cursor-pointer shadow-lg hover:scale-110 transition-transform">
                         <Camera size={14} />
                         <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
                     </label>
-                </div>
+                </motion.div>
 
                 {/* Identity */}
                 <div className="flex-1 text-center md:text-left space-y-3">
@@ -171,7 +199,6 @@ const Profile = () => {
                         {memberSince && <p className="text-[9px] text-text-muted opacity-50 mt-0.5 uppercase tracking-widest">Member since {memberSince}</p>}
                     </div>
 
-                    {/* Badge */}
                     <div className="flex flex-wrap gap-2 justify-center md:justify-start">
                         <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-eco-green/10 border border-eco-green/20 text-[9px] font-black uppercase tracking-widest text-eco-green">
                             <span>{carbonBadge}</span> {carbonLabel}
@@ -184,14 +211,14 @@ const Profile = () => {
 
                 {/* Stats row */}
                 <div className="flex gap-3 flex-wrap justify-center">
-                    <StatPill label="Score"   value={score}         unit="/100"       color="eco-green" />
-                    <StatPill label="Records" value={totalRecords}  unit="entries"    color="analytics-blue" />
-                    <StatPill label="Avg CO₂" value={avgCO2.toFixed(1)} unit="kg/day" color="eco-green" />
+                    <motion.div whileHover={{ y: -5 }}><StatPill label="Score"   value={score}         unit="/100"       color="eco-green" /></motion.div>
+                    <motion.div whileHover={{ y: -5 }}><StatPill label="Records" value={totalRecords}  unit="entries"    color="analytics-blue" /></motion.div>
+                    <motion.div whileHover={{ y: -5 }}><StatPill label="Avg CO₂" value={avgCO2.toFixed(1)} unit="kg/day" color="eco-green" /></motion.div>
                 </div>
-            </div>
+            </motion.div>
 
             {/* Edit Form */}
-            <div className="neo-card p-6 md:p-8 space-y-6 shadow-sm">
+            <motion.div variants={itemVariants} className="neo-card p-6 md:p-8 space-y-6 shadow-sm">
                 <div>
                     <h3 className="font-black text-sm uppercase tracking-widest">Account Information</h3>
                     <p className="text-[9px] text-text-muted mt-0.5">Update your personal details</p>
@@ -221,10 +248,10 @@ const Profile = () => {
                         );
                     })}
                 </div>
-            </div>
+            </motion.div>
 
             {/* Password Change */}
-            <div className="neo-card p-6 md:p-8 space-y-5 shadow-sm">
+            <motion.div variants={itemVariants} className="neo-card p-6 md:p-8 space-y-5 shadow-sm">
                 <div className="flex items-center gap-3">
                     <div className="w-9 h-9 rounded-xl bg-analytics-blue/10 flex items-center justify-center text-analytics-blue border border-analytics-blue/20">
                         <Key size={16} />
@@ -262,30 +289,35 @@ const Profile = () => {
                         </div>
                     ))}
                 </div>
-            </div>
+            </motion.div>
 
             {/* Save Button */}
-            <button
+            <motion.button
+                variants={itemVariants}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={handleSave}
                 disabled={saving}
                 className="btn-neo py-4 w-full justify-center shadow-xl shadow-eco-green/20 text-[10px] font-black uppercase tracking-widest gap-3 disabled:opacity-60"
             >
                 {saving ? <Loader size={16} className="animate-spin" /> : <CheckCircle size={16} />}
                 {saving ? 'Saving...' : 'Save Profile'}
-            </button>
+            </motion.button>
 
             {/* Badges */}
-            <div className="neo-card p-6 md:p-8 space-y-5 shadow-sm">
+            <motion.div variants={itemVariants} className="neo-card p-6 md:p-8 space-y-5 shadow-sm">
                 <div>
                     <h3 className="font-black text-sm uppercase tracking-widest">Sustainability Badges</h3>
                     <p className="text-[9px] text-text-muted mt-0.5">Earned through your eco journey</p>
                 </div>
                 <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
                     {badges.map(b => (
-                        <BadgeCard key={b.label} icon={b.emoji} label={b.label} desc={b.desc} active={b.active} />
+                        <motion.div whileHover={{ scale: 1.05 }} key={b.label}>
+                            <BadgeCard icon={b.emoji} label={b.label} desc={b.desc} active={b.active} />
+                        </motion.div>
                     ))}
                 </div>
-            </div>
+            </motion.div>
         </motion.div>
     );
 };

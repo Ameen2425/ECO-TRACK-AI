@@ -69,7 +69,6 @@ const SettingsPage = () => {
             });
             setSettings(res.data);
         } catch {
-            // Fallback defaults if endpoint is unavailable
             setSettings({
                 daily_reminder:     true,
                 weekly_summary:     true,
@@ -83,6 +82,26 @@ const SettingsPage = () => {
     };
 
     useEffect(() => { fetchSettings(); }, [token]);
+
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: {
+                staggerChildren: 0.1,
+                delayChildren: 0.2
+            }
+        }
+    };
+
+    const itemVariants = {
+        hidden: { opacity: 0, y: 20 },
+        visible: { 
+            opacity: 1, 
+            y: 0,
+            transition: { duration: 0.5, ease: "easeOut" }
+        }
+    };
 
     const set = (key, val) => setSettings(s => ({ ...s, [key]: val }));
 
@@ -103,119 +122,132 @@ const SettingsPage = () => {
 
     if (loading || !settings) return (
         <div className="flex items-center justify-center min-h-[400px]">
-            <div className="w-10 h-10 border-4 border-eco-green/20 border-t-eco-green rounded-full animate-spin" />
+            <motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: "linear" }} className="w-10 h-10 border-4 border-eco-green/20 border-t-eco-green rounded-full" />
         </div>
     );
 
     return (
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="flex flex-col gap-6 pb-12 max-w-4xl">
+        <motion.div 
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            className="flex flex-col gap-6 pb-12 max-w-4xl"
+        >
 
-            <div>
+            <motion.div variants={itemVariants}>
                 <h2 className="text-2xl font-black uppercase tracking-tight text-text-light dark:text-text-dark">System Configurations</h2>
                 <p className="text-xs text-text-muted mt-1">Calibrate your interface preferences and notification settings.</p>
-            </div>
+            </motion.div>
 
             {/* Visual Interface */}
-            <SectionCard title="Visual Interface">
-                <SettingRow
-                    icon={isDarkMode ? Moon : Sun}
-                    label="Dark / Light Mode"
-                    desc="Toggle between Light and Dark appearance for the dashboard."
-                    right={<Toggle checked={isDarkMode} onChange={() => toggleTheme()} />}
-                />
-                <SettingRow
-                    icon={Zap}
-                    label="Animations"
-                    desc="Enable fluid micro-animations and transitions across the dashboard."
-                    right={<Toggle checked={settings.animations_enabled} onChange={v => set('animations_enabled', v)} />}
-                />
-                <SettingRow
-                    icon={Globe}
-                    label="Language"
-                    desc="Set the display language for the application."
-                    right={
-                        <span className="text-[9px] font-black uppercase tracking-widest text-eco-green bg-eco-green/10 border border-eco-green/20 px-3 py-1 rounded-lg">
-                            English (US)
-                        </span>
-                    }
-                />
-            </SectionCard>
+            <motion.div variants={itemVariants}>
+                <SectionCard title="Visual Interface">
+                    <SettingRow
+                        icon={isDarkMode ? Moon : Sun}
+                        label="Dark / Light Mode"
+                        desc="Toggle between Light and Dark appearance for the dashboard."
+                        right={<Toggle checked={isDarkMode} onChange={() => toggleTheme()} />}
+                    />
+                    <SettingRow
+                        icon={Zap}
+                        label="Animations"
+                        desc="Enable fluid micro-animations and transitions across the dashboard."
+                        right={<Toggle checked={settings.animations_enabled} onChange={v => set('animations_enabled', v)} />}
+                    />
+                    <SettingRow
+                        icon={Globe}
+                        label="Language"
+                        desc="Set the display language for the application."
+                        right={
+                            <span className="text-[9px] font-black uppercase tracking-widest text-eco-green bg-eco-green/10 border border-eco-green/20 px-3 py-1 rounded-lg">
+                                English (US)
+                            </span>
+                        }
+                    />
+                </SectionCard>
+            </motion.div>
 
             {/* Reminders & Notifications */}
-            <SectionCard title="Reminders & Notifications">
-                <SettingRow
-                    icon={Bell}
-                    label="Daily Reminder"
-                    desc="Receive a daily prompt to log your carbon emissions data."
-                    right={<Toggle checked={settings.daily_reminder} onChange={v => set('daily_reminder', v)} />}
-                />
-                <SettingRow
-                    icon={HardDrive}
-                    label="Weekly Summary"
-                    desc="Get a weekly digest of your emissions and sustainability score."
-                    right={<Toggle checked={settings.weekly_summary} onChange={v => set('weekly_summary', v)} />}
-                />
-                <SettingRow
-                    icon={Target}
-                    label="Goal Reminder"
-                    desc="Notify when you are approaching or missing your emission targets."
-                    right={<Toggle checked={settings.goal_reminder} onChange={v => set('goal_reminder', v)} />}
-                />
-                <SettingRow
-                    icon={Calendar}
-                    label="Reminder Frequency"
-                    desc="How often would you like to receive notification reminders?"
-                    right={
-                        <Select
-                            value={settings.reminder_frequency}
-                            onChange={v => set('reminder_frequency', v)}
-                            options={[
-                                { value: 'daily',   label: 'Daily' },
-                                { value: 'weekly',  label: 'Weekly' },
-                                { value: 'monthly', label: 'Monthly' },
-                            ]}
-                        />
-                    }
-                />
-                <SettingRow
-                    icon={Mail}
-                    label="Email Reports"
-                    desc="Receive periodic analytics summary via email. (Coming soon)"
-                    right={
-                        <span className="text-[9px] font-black uppercase tracking-widest text-text-muted bg-gray-100 dark:bg-gray-800 border border-eco-border px-3 py-1 rounded-lg">
-                            Coming Soon
-                        </span>
-                    }
-                />
-            </SectionCard>
+            <motion.div variants={itemVariants}>
+                <SectionCard title="Reminders & Notifications">
+                    <SettingRow
+                        icon={Bell}
+                        label="Daily Reminder"
+                        desc="Receive a daily prompt to log your carbon emissions data."
+                        right={<Toggle checked={settings.daily_reminder} onChange={v => set('daily_reminder', v)} />}
+                    />
+                    <SettingRow
+                        icon={HardDrive}
+                        label="Weekly Summary"
+                        desc="Get a weekly digest of your emissions and sustainability score."
+                        right={<Toggle checked={settings.weekly_summary} onChange={v => set('weekly_summary', v)} />}
+                    />
+                    <SettingRow
+                        icon={Target}
+                        label="Goal Reminder"
+                        desc="Notify when you are approaching or missing your emission targets."
+                        right={<Toggle checked={settings.goal_reminder} onChange={v => set('goal_reminder', v)} />}
+                    />
+                    <SettingRow
+                        icon={Calendar}
+                        label="Reminder Frequency"
+                        desc="How often would you like to receive notification reminders?"
+                        right={
+                            <Select
+                                value={settings.reminder_frequency}
+                                onChange={v => set('reminder_frequency', v)}
+                                options={[
+                                    { value: 'daily',   label: 'Daily' },
+                                    { value: 'weekly',  label: 'Weekly' },
+                                    { value: 'monthly', label: 'Monthly' },
+                                ]}
+                            />
+                        }
+                    />
+                    <SettingRow
+                        icon={Mail}
+                        label="Email Reports"
+                        desc="Receive periodic analytics summary via email. (Coming soon)"
+                        right={
+                            <span className="text-[9px] font-black uppercase tracking-widest text-text-muted bg-gray-100 dark:bg-gray-800 border border-eco-border px-3 py-1 rounded-lg">
+                                Coming Soon
+                            </span>
+                        }
+                    />
+                </SectionCard>
+            </motion.div>
 
             {/* Security */}
-            <SectionCard title="Security & Integrity">
-                <SettingRow
-                    icon={Eye}
-                    label="Privacy Mode"
-                    desc="Obfuscate sensitive footprint data in shared or public views."
-                    right={<Toggle checked={false} onChange={() => {}} disabled />}
-                />
-                <SettingRow
-                    icon={Shield}
-                    label="Two-Factor Authentication"
-                    desc="Add an extra security layer for your account access. (Coming soon)"
-                    right={
-                        <span className="text-[9px] font-black uppercase tracking-widest text-text-muted bg-gray-100 dark:bg-gray-800 border border-eco-border px-3 py-1 rounded-lg">
-                            Inactive
-                        </span>
-                    }
-                />
-            </SectionCard>
+            <motion.div variants={itemVariants}>
+                <SectionCard title="Security & Integrity">
+                    <SettingRow
+                        icon={Eye}
+                        label="Privacy Mode"
+                        desc="Obfuscate sensitive footprint data in shared or public views."
+                        right={<Toggle checked={false} onChange={() => {}} disabled />}
+                    />
+                    <SettingRow
+                        icon={Shield}
+                        label="Two-Factor Authentication"
+                        desc="Add an extra security layer for your account access. (Coming soon)"
+                        right={
+                            <span className="text-[9px] font-black uppercase tracking-widest text-text-muted bg-gray-100 dark:bg-gray-800 border border-eco-border px-3 py-1 rounded-lg">
+                                Inactive
+                            </span>
+                        }
+                    />
+                </SectionCard>
+            </motion.div>
 
             {/* Save Banner */}
-            <div className="neo-card p-6 flex flex-col sm:flex-row items-center justify-between gap-4 border-l-4 border-eco-green shadow-sm">
+            <motion.div variants={itemVariants} className="neo-card p-6 flex flex-col sm:flex-row items-center justify-between gap-4 border-l-4 border-eco-green shadow-sm">
                 <div className="space-y-1 text-center sm:text-left">
                     <h3 className="font-black text-base tracking-tight uppercase">Save Your Preferences</h3>
                     <p className="text-[10px] text-text-muted italic">All settings are applied instantly. Sync to persist reminders.</p>
                 </div>
-                <button
+                <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                     onClick={handleSave}
                     disabled={saving}
                     className="btn-neo px-8 py-3 gap-3 shadow-lg shadow-eco-green/20 text-[10px] font-black uppercase tracking-widest disabled:opacity-60"
@@ -227,8 +259,8 @@ const SettingsPage = () => {
                     ) : (
                         <><RefreshCw size={15} /> Save Settings</>
                     )}
-                </button>
-            </div>
+                </motion.button>
+            </motion.div>
         </motion.div>
     );
 };

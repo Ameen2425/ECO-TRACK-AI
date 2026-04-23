@@ -42,15 +42,76 @@ const FeatureCard = ({ icon: Icon, title, desc, color }) => (
 );
 
 const LandingPage = () => {
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: {
+                staggerChildren: 0.15,
+                delayChildren: 0.2
+            }
+        }
+    };
+
+    const itemVariants = {
+        hidden: { opacity: 0, y: 20 },
+        visible: { 
+            opacity: 1, 
+            y: 0,
+            transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] }
+        }
+    };
+
     return (
-        <div className="min-h-screen bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark font-inter selection:bg-eco-green/30 overflow-x-hidden transition-colors duration-700">
+        <div className="min-h-screen bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark font-inter selection:bg-eco-green/30 overflow-x-hidden transition-colors duration-700 relative">
             
+            {/* Premium Background Decorations */}
+            <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+                <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 0.05 }}
+                    transition={{ duration: 2 }}
+                    className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center"
+                />
+                
+                {/* Technical Grid */}
+                <div className="absolute inset-0 opacity-[0.1] dark:opacity-[0.05] bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:40px_40px]" />
+                
+                {/* Floating Animated Blobs */}
+                <motion.div 
+                    animate={{ 
+                        x: [0, 40, 0],
+                        y: [0, -40, 0],
+                        scale: [1, 1.2, 1]
+                    }}
+                    transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
+                    className="absolute top-[-10%] right-[-10%] w-[60%] h-[60%] bg-eco-green/10 dark:bg-eco-green/5 rounded-full blur-[120px]" 
+                />
+                <motion.div 
+                    animate={{ 
+                        x: [0, -40, 0],
+                        y: [0, 40, 0],
+                        scale: [1, 1.3, 1]
+                    }}
+                    transition={{ duration: 25, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+                    className="absolute bottom-[-10%] left-[-10%] w-[60%] h-[60%] bg-analytics-blue/10 dark:bg-analytics-blue/5 rounded-full blur-[120px]" 
+                />
+            </div>
+
             {/* Nav */}
-            <nav className="fixed top-0 left-0 right-0 h-20 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-xl border-b border-eco-border z-50 px-6 md:px-12 flex items-center justify-between">
+            <motion.nav 
+                initial={{ y: -100 }}
+                animate={{ y: 0 }}
+                transition={{ duration: 0.8, ease: "easeOut" }}
+                className="fixed top-0 left-0 right-0 h-20 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-xl border-b border-eco-border z-50 px-6 md:px-12 flex items-center justify-between"
+            >
                 <div className="flex items-center gap-3">
-                    <div className="w-11 h-11 rounded-2xl bg-eco-green flex items-center justify-center shadow-xl shadow-eco-green/20 rotate-3">
+                    <motion.div 
+                        whileHover={{ rotate: 15 }}
+                        className="w-11 h-11 rounded-2xl bg-eco-green flex items-center justify-center shadow-xl shadow-eco-green/20 rotate-3"
+                    >
                         <Leaf className="text-white" size={22} />
-                    </div>
+                    </motion.div>
                     <span className="font-black text-2xl tracking-tighter uppercase italic leading-none">
                         Eco<span className="text-eco-green">Track</span> <span className="text-[10px] block font-black uppercase tracking-[0.4em] opacity-40">Intelligence</span>
                     </span>
@@ -59,31 +120,40 @@ const LandingPage = () => {
                     <Link to="/login" className="text-[11px] font-black uppercase tracking-widest text-text-muted hover:text-eco-green transition-colors hidden sm:block">Log In</Link>
                     <Link to="/register" className="btn-neo px-6 py-2.5 shadow-xl shadow-eco-green/10 text-[11px]">Get Started</Link>
                 </div>
-            </nav>
+            </motion.nav>
 
             <main className="pt-32 pb-24 px-6 md:px-12 max-w-7xl mx-auto space-y-32">
                 
                 {/* Hero */}
-                <section className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-                    <motion.div 
-                        initial={{ opacity: 0, x: -60 }}
-                        whileInView={{ opacity: 1, x: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 1, ease: "easeOut" }}
-                        className="space-y-10"
-                    >
-                        <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-2xl bg-eco-green/10 text-eco-green border border-eco-green/20 text-[10px] font-black uppercase tracking-widest shadow-sm">
+                <motion.section 
+                    variants={containerVariants}
+                    initial="hidden"
+                    whileInView="visible"
+                    viewport={{ once: true }}
+                    className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center"
+                >
+                    <div className="space-y-10">
+                        <motion.div 
+                            variants={itemVariants}
+                            className="inline-flex items-center gap-2.5 px-4 py-2 rounded-2xl bg-eco-green/10 text-eco-green border border-eco-green/20 text-[10px] font-black uppercase tracking-widest shadow-sm"
+                        >
                             <Sparkles size={14} className="animate-pulse" />
                             Eco AI Engine v2.4 Active
-                        </div>
-                        <h1 className="text-6xl md:text-8xl font-black tracking-tighter leading-[0.9] text-text-light dark:text-text-dark">
+                        </motion.div>
+                        <motion.h1 
+                            variants={itemVariants}
+                            className="text-6xl md:text-8xl font-black tracking-tighter leading-[0.9] text-text-light dark:text-text-dark"
+                        >
                             Track Your <span className="text-eco-green italic decoration-eco-green/30 underline decoration-8">Carbon</span> Impact
-                        </h1>
-                        <p className="text-lg text-text-muted max-w-lg leading-relaxed font-medium">
+                        </motion.h1>
+                        <motion.p 
+                            variants={itemVariants}
+                            className="text-lg text-text-muted max-w-lg leading-relaxed font-medium"
+                        >
                             Join 10,000+ sustainability heroes using high-fidelity AI analytics to measure, 
                             reduce, and offset their carbon trajectory with surgical precision.
-                        </p>
-                        <div className="flex flex-wrap gap-5">
+                        </motion.p>
+                        <motion.div variants={itemVariants} className="flex flex-wrap gap-5">
                             <Link to="/register" className="btn-neo px-10 py-5 text-[11px] group shadow-2xl shadow-eco-green/20 uppercase tracking-widest font-black">
                                 Start Free Trace <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform ml-2" />
                             </Link>
@@ -93,18 +163,18 @@ const LandingPage = () => {
                                 </div>
                                 <span className="text-[10px] font-black uppercase tracking-widest text-text-muted">+12k Active</span>
                             </div>
-                        </div>
-                    </motion.div>
+                        </motion.div>
+                    </div>
 
                     <motion.div 
-                        initial={{ opacity: 0, scale: 0.8, rotate: 5 }}
-                        whileInView={{ opacity: 1, scale: 1, rotate: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 1.2, ease: "backOut" }}
+                        variants={itemVariants}
                         className="relative"
                     >
                         {/* Premium Preview */}
-                        <div className="neo-card-glow p-8 md:p-12 backdrop-blur-3xl bg-white/40 dark:bg-gray-950/40 border-2 border-white/20 dark:border-white/5 shadow-[0_40px_100px_-20px_rgba(22,163,74,0.15)] relative z-10 group">
+                        <motion.div 
+                            whileHover={{ y: -10, rotate: 1 }}
+                            className="neo-card-glow p-8 md:p-12 backdrop-blur-3xl bg-white/40 dark:bg-gray-950/40 border-2 border-white/20 dark:border-white/5 shadow-[0_40px_100px_-20px_rgba(22,163,74,0.15)] relative z-10 group"
+                        >
                             <div className="flex items-center justify-between mb-10">
                                 <div className="space-y-1">
                                     <h3 className="text-[10px] font-black opacity-30 uppercase tracking-[0.4em]">Intelligence Node</h3>
@@ -157,70 +227,106 @@ const LandingPage = () => {
                                     </AreaChart>
                                 </ResponsiveContainer>
                             </div>
-                        </div>
+                        </motion.div>
 
                         {/* Floating depth */}
-                        <div className="absolute -top-12 -right-12 w-48 h-48 bg-analytics-blue rounded-full blur-[100px] opacity-20 animate-pulse" />
-                        <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-eco-green rounded-full blur-[120px] opacity-15 animate-pulse" />
+                        <motion.div 
+                            animate={{ 
+                                scale: [1, 1.2, 1],
+                                x: [0, 20, 0],
+                                y: [0, -20, 0]
+                            }}
+                            transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+                            className="absolute -top-12 -right-12 w-48 h-48 bg-analytics-blue rounded-full blur-[100px] opacity-20" 
+                        />
+                        <motion.div 
+                            animate={{ 
+                                scale: [1, 1.3, 1],
+                                x: [0, -20, 0],
+                                y: [0, 20, 0]
+                            }}
+                            transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+                            className="absolute -bottom-20 -left-20 w-64 h-64 bg-eco-green rounded-full blur-[120px] opacity-15" 
+                        />
                     </motion.div>
-                </section>
+                </motion.section>
 
                 {/* Features */}
-                <section className="space-y-20">
+                <motion.section 
+                    variants={containerVariants}
+                    initial="hidden"
+                    whileInView="visible"
+                    viewport={{ once: true, margin: "-100px" }}
+                    className="space-y-20"
+                >
                     <div className="text-center space-y-4">
-                        <div className="inline-block px-4 py-2 rounded-full bg-eco-green/5 border border-eco-green/10 text-[10px] font-black uppercase tracking-widest text-eco-green mb-2">Capabilities</div>
-                        <h2 className="text-4xl md:text-6xl font-black tracking-tighter uppercase">High Fidelity Intelligence</h2>
-                        <p className="text-text-muted max-w-2xl mx-auto text-base font-medium">Engineered for precision. Built for impact. Join the elite community of climate conscious leaders.</p>
+                        <motion.div variants={itemVariants} className="inline-block px-4 py-2 rounded-full bg-eco-green/5 border border-eco-green/10 text-[10px] font-black uppercase tracking-widest text-eco-green mb-2">Capabilities</motion.div>
+                        <motion.h2 variants={itemVariants} className="text-4xl md:text-6xl font-black tracking-tighter uppercase">High Fidelity Intelligence</motion.h2>
+                        <motion.p variants={itemVariants} className="text-text-muted max-w-2xl mx-auto text-base font-medium">Engineered for precision. Built for impact. Join the elite community of climate conscious leaders.</motion.p>
                     </div>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                        <FeatureCard 
-                            icon={BarChart3} 
-                            color="#16A34A"
-                            title="Analytics" 
-                            desc="Deep neural breakdown of emissions by transport, energy, and diet with surgical precision." 
-                        />
-                        <FeatureCard 
-                            icon={Globe} 
-                            color="#2563EB"
-                            title="Global Scale" 
-                            desc="Benchmark your trajectory against global averages and competitive eco leaderboards." 
-                        />
-                        <FeatureCard 
-                            icon={Shield} 
-                            color="#059669"
-                            title="Privacy OS" 
-                            desc="Your personal activity clusters are encrypted and remain under your absolute control." 
-                        />
-                        <FeatureCard 
-                            icon={Wind} 
-                            color="#0284C7"
-                            title="Offset Hub" 
-                            desc="Direct integration with validated environmental projects to achieve carbon equilibrium." 
-                        />
+                        <motion.div variants={itemVariants}><FeatureCard icon={BarChart3} color="#16A34A" title="Analytics" desc="Deep neural breakdown of emissions by transport, energy, and diet with surgical precision." /></motion.div>
+                        <motion.div variants={itemVariants}><FeatureCard icon={Globe} color="#2563EB" title="Global Scale" desc="Benchmark your trajectory against global averages and competitive eco leaderboards." /></motion.div>
+                        <motion.div variants={itemVariants}><FeatureCard icon={Shield} color="#059669" title="Privacy OS" desc="Your personal activity clusters are encrypted and remain under your absolute control." /></motion.div>
+                        <motion.div variants={itemVariants}><FeatureCard icon={Wind} color="#0284C7" title="Offset Hub" desc="Direct integration with validated environmental projects to achieve carbon equilibrium." /></motion.div>
                     </div>
-                </section>
+                </motion.section>
 
                 {/* Big CTA */}
-                <section className="neo-card p-12 md:p-24 relative overflow-hidden bg-eco-green text-white border-none text-center space-y-10 group shadow-[0_50px_100px_-20px_rgba(22,163,74,0.3)]">
+                <motion.section 
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    whileInView={{ opacity: 1, scale: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.8 }}
+                    className="neo-card p-12 md:p-24 relative overflow-hidden bg-eco-green text-white border-none text-center space-y-10 group shadow-[0_50px_100px_-20px_rgba(22,163,74,0.3)]"
+                >
                     <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10 pointer-events-none" />
                     <div className="relative z-10 space-y-6">
-                        <h2 className="text-5xl md:text-7xl font-black tracking-tighter uppercase leading-[0.9]">Ready to Synchronize?</h2>
-                        <p className="opacity-80 max-w-2xl mx-auto text-lg font-medium italic underline decoration-white/20 underline-offset-8">
+                        <motion.h2 
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.3 }}
+                            className="text-5xl md:text-7xl font-black tracking-tighter uppercase leading-[0.9]"
+                        >
+                            Ready to Synchronize?
+                        </motion.h2>
+                        <motion.p 
+                            initial={{ opacity: 0 }}
+                            whileInView={{ opacity: 1 }}
+                            transition={{ delay: 0.5 }}
+                            className="opacity-80 max-w-2xl mx-auto text-lg font-medium italic underline decoration-white/20 underline-offset-8"
+                        >
                             "The transition to a sustainable future is not an option, it is a technical necessity."
-                        </p>
+                        </motion.p>
                         <div className="pt-8 flex flex-wrap justify-center gap-6">
-                            <Link to="/register" className="bg-white text-eco-green hover:bg-gray-50 px-12 py-5 rounded-3xl font-black uppercase tracking-widest text-[11px] shadow-2xl transition-all hover:scale-105 active:scale-95">
-                                Initialize Account
-                            </Link>
-                            <Link to="/login" className="bg-eco-green border-2 border-white/40 hover:border-white px-12 py-5 rounded-3xl font-black uppercase tracking-widest text-[11px] transition-all">
-                                Member Access
-                            </Link>
+                            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                                <Link to="/register" className="bg-white text-eco-green hover:bg-gray-50 px-12 py-5 rounded-3xl font-black uppercase tracking-widest text-[11px] shadow-2xl transition-all block">
+                                    Initialize Account
+                                </Link>
+                            </motion.div>
+                            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                                <Link to="/login" className="bg-eco-green border-2 border-white/40 hover:border-white px-12 py-5 rounded-3xl font-black uppercase tracking-widest text-[11px] transition-all block">
+                                    Member Access
+                                </Link>
+                            </motion.div>
                         </div>
                     </div>
-                    <Activity size={400} className="absolute -bottom-40 -right-40 opacity-10 rotate-12 pointer-events-none" />
-                    <Target size={400} className="absolute -top-40 -left-40 opacity-10 -rotate-12 pointer-events-none" />
-                </section>
+                    <motion.div 
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                        className="absolute -bottom-40 -right-40 opacity-10 pointer-events-none"
+                    >
+                        <Activity size={400} />
+                    </motion.div>
+                    <motion.div 
+                        animate={{ rotate: -360 }}
+                        transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
+                        className="absolute -top-40 -left-40 opacity-10 pointer-events-none"
+                    >
+                        <Target size={400} />
+                    </motion.div>
+                </motion.section>
 
             </main>
 
