@@ -59,6 +59,7 @@ const QuickCheck = () => {
                 diet_type:       form.diet,
                 gas_usage:       form.gas,
                 waste_kg:        form.waste,
+                entry_mode:      'quick',
             }, { headers: { Authorization: `Bearer ${token}` } });
             setSaved(true);
             setTimeout(() => navigate('/dashboard'), 2000);

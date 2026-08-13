@@ -5,7 +5,12 @@ __pycache__/
 *.pyc
 
 *.db
+*.sqlite3
 instance/
+uploads/
+backend/uploads/
+venv/
+backend/venv/
 
 .env
 dist/

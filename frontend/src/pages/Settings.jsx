@@ -1,105 +1,232 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
 import { useTheme } from '../context/ThemeContext';
+import { useAuth } from '../context/AuthContext';
 import { motion } from 'framer-motion';
-import { Moon, Sun, Zap, Globe, Bell, HardDrive, Eye, Shield, RefreshCw } from 'lucide-react';
+import {
+    Moon, Sun, Zap, Globe, Bell, HardDrive, Eye, Shield,
+    RefreshCw, CheckCircle, Loader, Calendar, Clock, Mail, Target
+} from 'lucide-react';
+
+const Toggle = ({ checked, onChange, disabled }) => (
+    <button
+        type="button"
+        onClick={() => onChange(!checked)}
+        disabled={disabled}
+        className={`w-11 h-6 rounded-full p-0.5 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-eco-green/30 ${checked ? 'bg-eco-green' : 'bg-gray-200 dark:bg-gray-700'} ${disabled ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}
+    >
+        <div className={`w-5 h-5 bg-white rounded-full shadow transition-transform duration-300 ${checked ? 'translate-x-5' : 'translate-x-0'}`} />
+    </button>
+);
+
+const Select = ({ value, onChange, options }) => (
+    <select
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        className="px-3 py-1.5 rounded-lg border border-eco-border bg-white dark:bg-gray-800 text-xs font-bold outline-none focus:border-eco-green transition-all"
+    >
+        {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+    </select>
+);
+
+const SectionCard = ({ title, children }) => (
+    <div className="neo-card overflow-hidden shadow-sm">
+        <div className="px-6 py-4 border-b border-eco-border bg-gray-50/40 dark:bg-gray-900/30">
+            <h3 className="text-[9px] font-black uppercase tracking-[0.25em] text-text-muted">{title}</h3>
+        </div>
+        <div className="divide-y divide-eco-border">{children}</div>
+    </div>
+);
+
+const SettingRow = ({ icon: Icon, label, desc, right }) => (
+    <div className="px-6 py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 group hover:bg-gray-50/30 dark:hover:bg-gray-800/10 transition-colors">
+        <div className="flex items-start gap-4">
+            <div className="w-9 h-9 rounded-xl bg-gray-50 dark:bg-gray-900 border border-eco-border flex items-center justify-center text-text-muted group-hover:text-eco-green group-hover:border-eco-green/20 transition-all shrink-0">
+                <Icon size={16} />
+            </div>
+            <div>
+                <p className="font-bold text-sm tracking-tight text-text-light dark:text-text-dark">{label}</p>
+                <p className="text-[10px] text-text-muted mt-0.5 max-w-sm leading-relaxed">{desc}</p>
+            </div>
+        </div>
+        <div className="flex items-center gap-3 self-end sm:self-auto shrink-0">{right}</div>
+    </div>
+);
 
 const SettingsPage = () => {
-    const { isDarkMode, toggleTheme } = useTheme();
+    const { isDarkMode, toggleTheme }  = useTheme();
+    const { token }                    = useAuth();
+    const [settings, setSettings]      = useState(null);
+    const [saving,   setSaving]        = useState(false);
+    const [saved,    setSaved]         = useState(false);
+    const [loading,  setLoading]       = useState(true);
 
-    const sections = [
-        {
-            title: 'Visual Interface',
-            items: [
-                { label: 'System Protocol', desc: 'Toggle between Light and Dark mode appearance.', action: toggleTheme, type: 'toggle', active: isDarkMode, icon: isDarkMode ? Moon : Sun },
-                { label: 'Animations', desc: 'Enable fluid micro-animations across the dashboard.', type: 'toggle', active: true, icon: Zap },
-                { label: 'Language', desc: 'Set global transmission language.', value: 'English (US)', icon: Globe }
-            ]
-        },
-        {
-            title: 'Neural Notifications',
-            items: [
-                { label: 'Push Alerts', desc: 'Receive real-time biosphere status updates.', type: 'toggle', active: true, icon: Bell },
-                { label: 'Email Reports', desc: 'Weekly analytical summary delivered to your uplink.', type: 'toggle', active: false, icon: HardDrive }
-            ]
-        },
-        {
-            title: 'Security & Integrity',
-            items: [
-                { label: 'Privacy Mode', desc: 'Obfuscate sensitive node data in shared views.', type: 'toggle', active: false, icon: Eye },
-                { label: 'Two-Factor auth', desc: 'Add an extra layer of access shielding.', status: 'Inactive', icon: Shield }
-            ]
+    const fetchSettings = async () => {
+        setLoading(true);
+        try {
+            const res = await axios.get('http://localhost:5000/api/settings/', {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setSettings(res.data);
+        } catch {
+            // Fallback defaults if endpoint is unavailable
+            setSettings({
+                daily_reminder:     true,
+                weekly_summary:     true,
+                goal_reminder:      true,
+                reminder_frequency: 'daily',
+                animations_enabled: true,
+            });
+        } finally {
+            setLoading(false);
         }
-    ];
+    };
+
+    useEffect(() => { fetchSettings(); }, [token]);
+
+    const set = (key, val) => setSettings(s => ({ ...s, [key]: val }));
+
+    const handleSave = async () => {
+        setSaving(true);
+        try {
+            await axios.put('http://localhost:5000/api/settings/', settings, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setSaved(true);
+            setTimeout(() => setSaved(false), 2500);
+        } catch (err) {
+            console.error('Settings save failed', err);
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    if (loading || !settings) return (
+        <div className="flex items-center justify-center min-h-[400px]">
+            <div className="w-10 h-10 border-4 border-eco-green/20 border-t-eco-green rounded-full animate-spin" />
+        </div>
+    );
 
     return (
-        <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="flex flex-col gap-10 pb-12 max-w-4xl"
-        >
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="flex flex-col gap-6 pb-12 max-w-4xl">
+
             <div>
-                <h2 className="neo-heading text-2xl font-bold tracking-tight text-text-light dark:text-text-dark">System Configurations</h2>
-                <p className="neo-label mt-1 font-medium opacity-60">Calibrate global environment parameters and interface preferences</p>
+                <h2 className="text-2xl font-black uppercase tracking-tight text-text-light dark:text-text-dark">System Configurations</h2>
+                <p className="text-xs text-text-muted mt-1">Calibrate your interface preferences and notification settings.</p>
             </div>
 
-            <div className="grid grid-cols-1 gap-8">
-                {sections.map((section, idx) => (
-                    <div key={idx} className="neo-card overflow-hidden shadow-sm">
-                        <div className="px-8 py-5 border-b border-eco-border-light dark:border-eco-border-dark bg-gray-50/30 dark:bg-gray-900/30">
-                            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60">{section.title}</h3>
-                        </div>
-                        <div className="divide-y divide-border-light dark:divide-border-dark">
-                            {section.items.map((item, i) => {
-                                const Icon = item.icon;
-                                return (
-                                    <div key={i} className="px-8 py-6 flex flex-col md:flex-row md:items-center justify-between gap-4 group hover:bg-primary-light/[0.01] transition-colors">
-                                        <div className="flex items-start gap-4">
-                                            <div className="w-10 h-10 rounded-xl bg-gray-50 dark:bg-gray-900 border border-eco-border-light dark:border-eco-border-dark flex items-center justify-center text-text-muted group-hover:text-primary-light group-hover:border-primary-light/20 transition-all">
-                                                <Icon size={18} />
-                                            </div>
-                                            <div className="flex flex-col">
-                                                <span className="font-inter font-bold text-sm tracking-tight text-text-light dark:text-text-dark">{item.label}</span>
-                                                <span className="text-xs text-text-muted mt-0.5 max-w-sm">{item.desc}</span>
-                                            </div>
-                                        </div>
-                                        
-                                        <div className="flex items-center gap-4 self-end md:self-auto">
-                                            {item.type === 'toggle' ? (
-                                                <button 
-                                                    onClick={item.action}
-                                                    className={`w-12 h-6 rounded-full p-1 transition-all duration-300 ${item.active ? 'bg-primary-light' : 'bg-gray-200 dark:bg-gray-800'}`}
-                                                >
-                                                    <div className={`w-4 h-4 bg-white rounded-full transition-transform duration-300 ${item.active ? 'translate-x-6' : 'translate-x-0'}`} />
-                                                </button>
-                                            ) : item.value ? (
-                                                <span className="text-[10px] font-black uppercase tracking-widest text-primary-light bg-primary-light/5 px-3 py-1 rounded-lg border border-primary-light/10">
-                                                    {item.value}
-                                                </span>
-                                            ) : item.status ? (
-                                                <span className="text-[10px] font-black uppercase tracking-widest text-text-muted bg-gray-50 dark:bg-gray-800 px-3 py-1 rounded-lg border border-eco-border-light dark:border-eco-border-dark">
-                                                    {item.status}
-                                                </span>
-                                            ) : null}
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </div>
-                ))}
-            </div>
+            {/* Visual Interface */}
+            <SectionCard title="Visual Interface">
+                <SettingRow
+                    icon={isDarkMode ? Moon : Sun}
+                    label="Dark / Light Mode"
+                    desc="Toggle between Light and Dark appearance for the dashboard."
+                    right={<Toggle checked={isDarkMode} onChange={() => toggleTheme()} />}
+                />
+                <SettingRow
+                    icon={Zap}
+                    label="Animations"
+                    desc="Enable fluid micro-animations and transitions across the dashboard."
+                    right={<Toggle checked={settings.animations_enabled} onChange={v => set('animations_enabled', v)} />}
+                />
+                <SettingRow
+                    icon={Globe}
+                    label="Language"
+                    desc="Set the display language for the application."
+                    right={
+                        <span className="text-[9px] font-black uppercase tracking-widest text-eco-green bg-eco-green/10 border border-eco-green/20 px-3 py-1 rounded-lg">
+                            English (US)
+                        </span>
+                    }
+                />
+            </SectionCard>
 
-            <div className="neo-card p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-sm border-l-4 border-l-secondary-light">
-                <div className="space-y-1 text-center md:text-left">
-                    <h3 className="font-inter font-black text-lg text-text-light dark:text-text-dark tracking-tight uppercase">
-                        Master System Synchronization
-                    </h3>
-                    <p className="neo-label font-medium opacity-60 italic">Ensure all remote nodes are aligned with current configuration matrix</p>
+            {/* Reminders & Notifications */}
+            <SectionCard title="Reminders & Notifications">
+                <SettingRow
+                    icon={Bell}
+                    label="Daily Reminder"
+                    desc="Receive a daily prompt to log your carbon emissions data."
+                    right={<Toggle checked={settings.daily_reminder} onChange={v => set('daily_reminder', v)} />}
+                />
+                <SettingRow
+                    icon={HardDrive}
+                    label="Weekly Summary"
+                    desc="Get a weekly digest of your emissions and sustainability score."
+                    right={<Toggle checked={settings.weekly_summary} onChange={v => set('weekly_summary', v)} />}
+                />
+                <SettingRow
+                    icon={Target}
+                    label="Goal Reminder"
+                    desc="Notify when you are approaching or missing your emission targets."
+                    right={<Toggle checked={settings.goal_reminder} onChange={v => set('goal_reminder', v)} />}
+                />
+                <SettingRow
+                    icon={Calendar}
+                    label="Reminder Frequency"
+                    desc="How often would you like to receive notification reminders?"
+                    right={
+                        <Select
+                            value={settings.reminder_frequency}
+                            onChange={v => set('reminder_frequency', v)}
+                            options={[
+                                { value: 'daily',   label: 'Daily' },
+                                { value: 'weekly',  label: 'Weekly' },
+                                { value: 'monthly', label: 'Monthly' },
+                            ]}
+                        />
+                    }
+                />
+                <SettingRow
+                    icon={Mail}
+                    label="Email Reports"
+                    desc="Receive periodic analytics summary via email. (Coming soon)"
+                    right={
+                        <span className="text-[9px] font-black uppercase tracking-widest text-text-muted bg-gray-100 dark:bg-gray-800 border border-eco-border px-3 py-1 rounded-lg">
+                            Coming Soon
+                        </span>
+                    }
+                />
+            </SectionCard>
+
+            {/* Security */}
+            <SectionCard title="Security & Integrity">
+                <SettingRow
+                    icon={Eye}
+                    label="Privacy Mode"
+                    desc="Obfuscate sensitive footprint data in shared or public views."
+                    right={<Toggle checked={false} onChange={() => {}} disabled />}
+                />
+                <SettingRow
+                    icon={Shield}
+                    label="Two-Factor Authentication"
+                    desc="Add an extra security layer for your account access. (Coming soon)"
+                    right={
+                        <span className="text-[9px] font-black uppercase tracking-widest text-text-muted bg-gray-100 dark:bg-gray-800 border border-eco-border px-3 py-1 rounded-lg">
+                            Inactive
+                        </span>
+                    }
+                />
+            </SectionCard>
+
+            {/* Save Banner */}
+            <div className="neo-card p-6 flex flex-col sm:flex-row items-center justify-between gap-4 border-l-4 border-eco-green shadow-sm">
+                <div className="space-y-1 text-center sm:text-left">
+                    <h3 className="font-black text-base tracking-tight uppercase">Save Your Preferences</h3>
+                    <p className="text-[10px] text-text-muted italic">All settings are applied instantly. Sync to persist reminders.</p>
                 </div>
-                <button className="btn-neo group px-8 gap-3 shadow-lg shadow-primary-light/10">
-                    <RefreshCw size={16} className="group-hover:rotate-180 transition-transform duration-500" /> 
-                    <span>Sync Nodes</span>
+                <button
+                    onClick={handleSave}
+                    disabled={saving}
+                    className="btn-neo px-8 py-3 gap-3 shadow-lg shadow-eco-green/20 text-[10px] font-black uppercase tracking-widest disabled:opacity-60"
+                >
+                    {saving ? (
+                        <><Loader size={15} className="animate-spin" /> Saving...</>
+                    ) : saved ? (
+                        <><CheckCircle size={15} /> Saved!</>
+                    ) : (
+                        <><RefreshCw size={15} /> Save Settings</>
+                    )}
                 </button>
             </div>
         </motion.div>
