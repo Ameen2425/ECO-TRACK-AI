@@ -200,6 +200,14 @@ const Dashboard = () => {
                         <PlusCircle size={14} /> Add Entry
                     </Link>
                 </div>
+            </motion.div>
+
+            {/* Metrics Row */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <motion.div variants={itemVariants}><MetricCard label="Total Footprint" value={co2.toFixed(1)} unit="kg" icon={Leaf} color="green" /></motion.div>
+                <motion.div variants={itemVariants}><MetricCard label="Eco Score" value={score} unit="pts" icon={Target} color="green" /></motion.div>
+                <motion.div variants={itemVariants}><MetricCard label="Annual Offset" value={intelligence?.offset?.trees_to_offset ?? 0} unit="trees" icon={Globe} color="blue" /></motion.div>
+                <motion.div variants={itemVariants}><MetricCard label="Main Impact" value={highestCat} unit="" icon={Flame} color="blue" /></motion.div>
             </div>
 
             {/* Metrics Row */}
@@ -267,7 +275,7 @@ const Dashboard = () => {
                             </AreaChart>
                         </ResponsiveContainer>
                     </div>
-                </div>
+                </motion.div>
 
                 {/* Pie chart */}
                 <div className="neo-card p-5 md:p-8 flex flex-col gap-5">

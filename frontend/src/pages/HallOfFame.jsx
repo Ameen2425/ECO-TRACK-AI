@@ -68,6 +68,17 @@ const HallOfFame = () => {
                     <Trophy size={48} className="mx-auto text-text-muted opacity-20" />
                     <p className="font-bold text-text-muted">No rankings available yet.</p>
                 </div>
+                <div className="flex items-center gap-3 px-4 py-2 rounded-2xl bg-eco-green/10 border border-eco-green/20">
+                    <Globe size={14} className="text-eco-green" />
+                    <span className="text-[10px] font-black uppercase tracking-widest text-eco-green">Worldwide Community</span>
+                </div>
+            </motion.div>
+
+            {board.length === 0 ? (
+                <motion.div variants={itemVariants} className="neo-card p-16 text-center space-y-4">
+                    <Trophy size={48} className="mx-auto text-text-muted opacity-20" />
+                    <p className="font-bold text-text-muted">No rankings available yet.</p>
+                </motion.div>
             ) : (
                 <>
                     {/* Top 3 Podium */}
@@ -101,7 +112,7 @@ const HallOfFame = () => {
                                             <div className="w-16 h-16 rounded-3xl flex items-center justify-center border-2 shadow-inner transition-transform duration-700 group-hover:rotate-[360deg]"
                                                 style={{ background: b.bg, borderColor: b.border }}>
                                                 <BadgeIcon size={32} style={{ color: b.color }} />
-                                            </div>
+                                            </motion.div>
                                             
                                             <div className="space-y-1">
                                                 <h4 className={`font-black text-lg tracking-tight truncate max-w-[150px] ${entry.is_me ? 'text-eco-green' : 'text-text-light dark:text-text-dark'}`}>
@@ -129,7 +140,7 @@ const HallOfFame = () => {
                                 </motion.div>
                             );
                         })}
-                    </div>
+                    </motion.div>
 
                     {/* Full List */}
                     <div className="neo-card shadow-xl overflow-hidden border-t-4 border-t-eco-green">
@@ -181,7 +192,7 @@ const HallOfFame = () => {
                                             </div>
                                             <ChevronRight size={12} className="ml-auto text-text-muted opacity-30" />
                                         </div>
-                                    </div>
+                                    </motion.div>
                                 );
                             })}
                         </div>

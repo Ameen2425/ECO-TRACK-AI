@@ -41,7 +41,7 @@ const Sidebar = ({ className, isOpen, onClose }) => {
                 x: typeof window !== 'undefined' && window.innerWidth < 1024 ? (isOpen ? 0 : -280) : 0
             }}
             transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-            className={`fixed lg:relative left-0 top-0 h-screen bg-white dark:bg-gray-950 border-r border-eco-border z-50 flex flex-col shadow-2xl dark:shadow-none ${className || ''}`}
+            className={`fixed lg:relative left-0 top-0 h-screen bg-white/60 dark:bg-[#0F172A]/60 backdrop-blur-2xl border-r border-eco-border/40 z-50 flex flex-col shadow-2xl dark:shadow-none ${className || ''}`}
         >
             {/* Header / Logo Area */}
             <div className={`h-24 flex items-center px-6 transition-all duration-300 relative ${collapsed ? 'justify-center' : 'justify-between'}`}>

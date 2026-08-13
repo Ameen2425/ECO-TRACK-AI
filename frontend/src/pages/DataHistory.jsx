@@ -113,9 +113,7 @@ const DataHistory = () => {
     const fetchHistory = async () => {
         setLoading(true);
         try {
-            const res = await axios.get('http://localhost:5000/api/emissions/history', {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            const res = await axios.get('http://localhost:5000/api/emissions/history', { headers: { Authorization: `Bearer ${token}` } });
             setHistory(res.data);
             setFiltered(res.data);
         } catch (err) {
@@ -219,7 +217,7 @@ const DataHistory = () => {
                         <ArrowRight size={13} /> New
                     </Link>
                 </div>
-            </div>
+            </motion.div>
 
             {loading ? (
                 <div className="neo-card p-16 flex flex-col items-center gap-6 text-center">

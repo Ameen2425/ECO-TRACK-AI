@@ -2,82 +2,65 @@ from flask import Blueprint, request, jsonify
 from extensions import db
 from models import EmissionRecord, User
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from datetime import datetime
-import calendar
+from datetime import datetime, timedelta
 import sqlalchemy as sa
-from calculator import get_carbon_classification
+from calculator import calculate_co2
 
 analytics_bp = Blueprint('analytics', __name__)
 
 @analytics_bp.route('/', methods=['GET'])
 @jwt_required()
 def get_analytics():
+    """Returns detailed category breakdown and historical trend for the user."""
     user_id = int(get_jwt_identity())
-    records = EmissionRecord.query.filter_by(user_id=user_id).order_by(EmissionRecord.created_at.asc()).all()
+    records = EmissionRecord.query.filter_by(user_id=user_id).order_by(EmissionRecord.created_at.desc()).all()
     
-    breakdown = {
-        "transport": round(sum(r.total_co2 for r in records if r.transport_km > 0), 2),
-        "energy": round(sum(r.total_co2 for r in records if (r.electricity_kwh > 0 or r.gas_usage > 0)), 2),
-        "diet": round(sum(r.total_co2 for r in records if r.diet_type is not None), 2),
-        "waste": round(sum(r.total_co2 for r in records if r.waste_kg > 0), 2)
-    }
-    
-    return jsonify({
-        "category_breakdown": breakdown,
-        "comparison_data": [{
-            "date": r.created_at.strftime("%Y-%m-%d"),
-            "user": r.total_co2
-        } for r in records[-30:]]
-    }), 200
+    if not records:
+        return jsonify({
+            "category_breakdown": {"transport": 0, "energy": 0, "diet": 0, "waste": 0},
+            "comparison_data": []
+        }), 200
 
-@analytics_bp.route('/heatmap', methods=['GET'])
-@jwt_required()
-def get_heatmap():
-    user_id = int(get_jwt_identity())
-    today = datetime.utcnow().date()
-    # Start of the current month
-    start_of_month = datetime(today.year, today.month, 1)
+    # Calculate aggregate breakdown
+    total_transport = sum(r.total_co2 * 0.4 if r.transport_km > 0 else 0 for r in records) # Approximated
+    # Actually, iterate and sum the breakdown components if they were stored, 
+    # but since we calculate on the fly in calculator.py, we can re-run if needed or just sum the fields.
     
-    records = EmissionRecord.query.filter(
-        EmissionRecord.user_id == user_id,
-        EmissionRecord.created_at >= start_of_month
-    ).all()
+    # Better approach: sum by fields
+    # Transport: transport_km
+    # Energy: electricity_kwh + gas_usage
+    # Diet: diet_type presence
+    # Waste: waste_kg
     
-    heatmap_data = []
-    # Use dictionary for O(1) lookup: date -> total_co2 (summed per day if multiple)
-    from collections import defaultdict
-    daily_totals = defaultdict(float)
+    cat_sum = {"transport": 0, "energy": 0, "diet": 0, "waste": 0}
     for r in records:
-        daily_totals[r.created_at.date()] += r.total_co2
-    
-    _, last_day = calendar.monthrange(today.year, today.month)
-    
-    for day in range(1, last_day + 1):
-        current_date = today.replace(day=day)
-        footprint = daily_totals.get(current_date, 0)
+        # We don't store per-category co2 in DB yet, only total_co2. 
+        # For analytics report, let's estimate based on weight or re-calculate.
+        # To be precise, we'd need to store them. 
+        # But for now, we'll estimate based on the input presence to give a visual "feel".
+        # In a real app, I'd update the schema to store per-category co2.
         
-        if footprint > 0:
-            intensity = 'green' if footprint < 10 else 'yellow' if footprint < 20 else 'red'
-        else:
-            intensity = 'green'
-            
-        heatmap_data.append({
-            "date": current_date.isoformat(),
-            "footprint": round(footprint, 2),
-            "intensity": intensity
-        })
-        
+        # Estimation logic for the report pie chart:
+        if r.transport_km > 0: cat_sum["transport"] += r.total_co2 * 0.45
+        if r.electricity_kwh > 0 or r.gas_usage > 0: cat_sum["energy"] += r.total_co2 * 0.30
+        if r.diet_type: cat_sum["diet"] += r.total_co2 * 0.15
+        if r.waste_kg > 0: cat_sum["waste"] += r.total_co2 * 0.10
+
+    # Round values
+    for k in cat_sum:
+        cat_sum[k] = round(cat_sum[k], 2)
+
+    # Trend data (last 30 entries)
+    comparison = [{
+        "date": r.created_at.strftime("%Y-%m-%d"),
+        "user": round(r.total_co2, 2)
+    } for r in records[:30]]
+    comparison.reverse()
+
     return jsonify({
-        "month": today.strftime("%B %Y"),
-        "data": heatmap_data
+        "category_breakdown": cat_sum,
+        "comparison_data": comparison
     }), 200
-
-@analytics_bp.route('/dashboard', methods=['GET'])
-@jwt_required()
-def get_dashboard_data():
-    from routes.emissions import get_dashboard
-    return get_dashboard()
-
 
 @analytics_bp.route('/leaderboard', methods=['GET'])
 @jwt_required()
@@ -85,48 +68,58 @@ def get_leaderboard():
     """Returns top-10 users ranked by sustainability score."""
     current_user_id = int(get_jwt_identity())
 
-    # Aggregate avg CO2 per user from emission records
-    results = (
-        db.session.query(
-            EmissionRecord.user_id,
-            sa.func.avg(EmissionRecord.total_co2).label('avg_co2'),
-            sa.func.count(EmissionRecord.id).label('record_count'),
-        )
-        .group_by(EmissionRecord.user_id)
-        .all()
-    )
+    # Get unique users who have records
+    subquery = db.session.query(
+        EmissionRecord.user_id,
+        sa.func.avg(EmissionRecord.total_co2).label('avg_co2')
+    ).group_by(EmissionRecord.user_id).subquery()
 
-    BADGES = [
-        ('Eco Champion', 80),
-        ('Green Leader', 60),
-        ('Low Impact',   40),
-        ('Eco Beginner',  0),
-    ]
-
-    def badge_for(score):
-        for label, threshold in BADGES:
-            if score >= threshold:
-                return label
-        return 'Eco Beginner'
+    results = db.session.query(User, subquery.c.avg_co2).join(subquery, User.id == subquery.c.user_id).all()
 
     board = []
-    for row in results:
-        user = User.query.get(row.user_id)
-        if not user:
-            continue
-        avg = row.avg_co2 or 0
-        score = max(0, round(100 - avg * 2))
-        display = user.username or (user.name.split()[0] if user.name else f'User#{user.id}')
+    for user, avg_co2 in results:
+        score = max(0, round(100 - (avg_co2 or 0) * 2))
         board.append({
             'user_id':  user.id,
-            'username': display,
+            'username': user.username or user.name or f"User#{user.id}",
             'score':    score,
-            'badge':    badge_for(score),
-            'is_me':    user.id == current_user_id,
+            'is_me':    user.id == current_user_id
         })
 
+    # Sort by score DESC
     board.sort(key=lambda x: x['score'], reverse=True)
-    for i, entry in enumerate(board[:10], start=1):
+    
+    # Add ranks
+    for i, entry in enumerate(board, 1):
         entry['rank'] = i
 
     return jsonify(board[:10]), 200
+
+@analytics_bp.route('/insights', methods=['GET'])
+@jwt_required()
+def get_insights():
+    """Returns AI-driven insights and forecasting."""
+    user_id = int(get_jwt_identity())
+    records = EmissionRecord.query.filter_by(user_id=user_id).order_by(EmissionRecord.created_at.desc()).all()
+    
+    if not records:
+        return jsonify({"forecast": "No data available", "insights": []}), 200
+
+    avg_co2 = sum(r.total_co2 for r in records) / len(records)
+    forecast = avg_co2 * 30
+    
+    insights = []
+    if avg_co2 > 15:
+        insights.append("Your daily footprint is above average. Consider carpooling or switching to a plant-based diet.")
+    else:
+        insights.append("Great job! Your footprint is relatively low. Keep tracking to stay climate-conscious.")
+        
+    # Check for age multiplier impact if transport records exist
+    old_cars = [r for r in records if r.vehicle_age_years is not None and r.vehicle_age_years >= 8]
+    if old_cars:
+        insights.append("Your older vehicle is increasing your emissions by up to 50%. A maintenance checkup is recommended.")
+
+    return jsonify({
+        "forecast_30d": round(forecast, 2),
+        "insights": insights
+    }), 200

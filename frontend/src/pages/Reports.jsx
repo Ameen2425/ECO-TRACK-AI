@@ -36,7 +36,7 @@ const InsightCard = ({ title, value, unit, icon: Icon, color, description, trend
             </div>
             <p className="text-[9px] font-medium opacity-50 italic leading-tight">{description}</p>
         </div>
-    </div>
+    </motion.div>
 );
 
 const Reports = () => {
@@ -311,6 +311,91 @@ const Reports = () => {
                         <div className="flex-1 flex items-center justify-center text-text-muted text-sm opacity-40">No breakdown data yet</div>
                     )}
                 </div>
+                <div className="flex items-center gap-2 w-full md:w-auto">
+                    <motion.button whileHover={{ rotate: 180 }} transition={{ duration: 0.5 }} onClick={fetchData} className="w-9 h-9 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-text-muted hover:text-eco-green transition-all">
+                        <RefreshCw size={15} />
+                    </motion.button>
+                    <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={handleDownloadCSV} className="flex-1 md:flex-none btn-neo-outline px-4 py-2 border-eco-border text-[9px] font-black uppercase tracking-widest">
+                        <Download size={13} /> CSV
+                    </motion.button>
+                    <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={handleDownloadPDF} className="flex-1 md:flex-none btn-neo px-4 py-2 bg-analytics-blue text-white shadow-lg shadow-analytics-blue/20 text-[9px] font-black uppercase tracking-widest">
+                        <FileText size={13} /> PDF Report
+                    </motion.button>
+                </div>
+            </motion.div>
+
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <motion.div variants={itemVariants}><InsightCard title="Peak Emission" value={highestFootprint.toFixed(1)} unit="kg" icon={Zap} color="#2563EB" description="Highest recorded entry" /></motion.div>
+                <motion.div variants={itemVariants}><InsightCard title="30-Day Avg" value={avgLoad30} unit="kg" icon={Activity} color="#16A34A" description="Typical daily footprint" /></motion.div>
+                <motion.div variants={itemVariants}><InsightCard title="Monthly Forecast" value={monthForecast} unit="kg" icon={Target} color="#059669" description="Est. total for 30 days" /></motion.div>
+                <motion.div variants={itemVariants}><InsightCard title="Trees to Offset" value={treesNeeded} unit="" icon={Leaf} color="#0284C7" description="Annual absorption = 21 kg" /></motion.div>
+            </div>
+
+            <motion.div variants={itemVariants} className="neo-card p-5 md:p-8 space-y-5">
+                <div className="flex justify-between items-center">
+                    <h3 className="text-sm font-black uppercase tracking-widest">Emission Trajectory</h3>
+                    <TrendingDown size={16} className="text-eco-green" />
+                </div>
+                <div className="h-72 w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={fullHistory}>
+                            <defs>
+                                <linearGradient id="areaReport" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%"  stopColor="#2563EB" stopOpacity={0.15} />
+                                    <stop offset="95%" stopColor="#2563EB" stopOpacity={0} />
+                                </linearGradient>
+                            </defs>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" opacity={0.4} />
+                            <XAxis dataKey="date" tickFormatter={s => s?.substring(5,10)} axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: 'var(--text-muted)' }} />
+                            <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: 'var(--text-muted)' }} />
+                            <Tooltip contentStyle={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12, fontSize: 11 }} />
+                            <Area type="monotone" dataKey="footprint" name="CO₂ (kg)" stroke="#2563EB" strokeWidth={2.5} fillOpacity={1} fill="url(#areaReport)" animationDuration={1500} />
+                        </AreaChart>
+                    </ResponsiveContainer>
+                </div>
+            </motion.div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <motion.div variants={itemVariants} className="neo-card p-5 md:p-8 flex flex-col gap-6">
+                    <h3 className="text-sm font-black uppercase tracking-widest">Category Impact</h3>
+                    <div className="flex-1 flex flex-col justify-center">
+                        <div className="h-52 w-full">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <PieChart>
+                                    <Pie data={pieData} innerRadius={60} outerRadius={85} paddingAngle={6} dataKey="value" stroke="none">
+                                        {pieData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                                    </Pie>
+                                    <Tooltip contentStyle={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12 }} />
+                                </PieChart>
+                            </ResponsiveContainer>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4 mt-6">
+                            {pieData.map((d, i) => (
+                                <div key={d.name} className="flex items-center gap-2">
+                                    <div className="w-2 h-2 rounded-full" style={{ background: COLORS[i] }} />
+                                    <span className="text-[9px] font-black uppercase tracking-widest text-text-muted">{d.name}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </motion.div>
+
+                <motion.div variants={itemVariants} className="neo-card p-5 md:p-8 space-y-6">
+                    <h3 className="text-sm font-black uppercase tracking-widest">{reportType} Comparison</h3>
+                    <div className="h-52 w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={reportType === 'Weekly' ? weeklyBarData : monthlyBarData} barSize={50}>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" opacity={0.3} />
+                                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: 'var(--text-muted)' }} />
+                                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: 'var(--text-muted)' }} />
+                                <Tooltip contentStyle={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12 }} />
+                                <Bar dataKey="co2" name="CO₂ (kg)" radius={[8, 8, 0, 0]} animationDuration={1000}>
+                                    {(reportType === 'Weekly' ? weeklyBarData : monthlyBarData).map((_, i) => <Cell key={i} fill={i === 1 ? '#16A34A' : '#2563EB'} />)}
+                                </Bar>
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+                </motion.div>
             </div>
 
             {/* Charts Row 2 – Weekly & Monthly bar charts */}

@@ -114,7 +114,7 @@ const EcoTips = () => {
                             </div>
                         </div>
                     )}
-                </div>
+                </motion.div>
 
                 {/* Offset Card */}
                 <div className="neo-card p-8 group relative overflow-hidden shadow-xl border-eco-green/10 border-t-4 border-t-eco-green">
@@ -141,7 +141,20 @@ const EcoTips = () => {
                             </p>
                         </div>
                     </div>
-                </div>
+                    <div className="space-y-4 relative z-10">
+                        <div className="flex items-baseline gap-2">
+                            <span className="font-inter font-black text-5xl text-eco-green tracking-tighter">
+                                {treesNeeded || '0'}
+                            </span>
+                            <span className="text-xs font-black uppercase tracking-widest opacity-40">Trees Needed</span>
+                        </div>
+                        <div className="p-3 rounded-xl bg-eco-green/5 border border-eco-green/10">
+                            <p className="text-[10px] text-eco-green font-bold leading-relaxed">
+                                Requires {treesNeeded} mature trees to absorb your current monthly emissions.
+                            </p>
+                        </div>
+                    </div>
+                </motion.div>
             </div>
 
             {/* AI Recommendations */}
@@ -205,6 +218,20 @@ const EcoTips = () => {
                     </button>
                 </div>
             </div>
+
+            {/* CTA */}
+            <motion.div variants={itemVariants} className="neo-card p-8 bg-gradient-to-r from-eco-green to-analytics-blue relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-32 -mt-32 group-hover:scale-110 transition-transform duration-1000" />
+                <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+                    <div className="space-y-2 text-center md:text-left">
+                        <h3 className="text-xl font-black text-white uppercase tracking-tight">Become a Carbon Neutral Hero</h3>
+                        <p className="text-white/70 text-[10px] uppercase font-black tracking-widest">Join our leaderboard and complete weekly challenges</p>
+                    </div>
+                    <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="px-8 py-3 bg-white text-eco-green font-black rounded-2xl shadow-xl transition-all text-[10px] uppercase tracking-widest">
+                        Join Community →
+                    </motion.button>
+                </div>
+            </motion.div>
         </motion.div>
     );
 };

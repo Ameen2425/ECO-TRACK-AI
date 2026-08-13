@@ -101,28 +101,31 @@
    CARDS
 ────────────────────────────────────── */
 .neo-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 1rem; /* rounded-xl equivalent */
+  background: color-mix(in srgb, var(--bg-card) 70%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid color-mix(in srgb, var(--border) 40%, transparent);
+  border-radius: 1.5rem;
   box-shadow: var(--shadow);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
 }
 .neo-card:hover { 
   border-color: var(--accent);
-  box-shadow: var(--shadow-lg);
-  transform: translateY(-2px);
+  box-shadow: 0 20px 40px -20px color-mix(in srgb, var(--accent) 20%, transparent);
+  transform: translateY(-4px) scale(1.005);
 }
 
 .neo-card-glow {
-  background: var(--bg-card);
-  border-radius: 1rem;
-  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--bg-card) 60%, transparent);
+  backdrop-filter: blur(20px);
+  border-radius: 1.5rem;
+  border: 1px solid color-mix(in srgb, var(--border) 50%, transparent);
   box-shadow: var(--shadow);
-  transition: all 0.3s ease;
+  transition: all 0.4s ease;
 }
 .dark .neo-card-glow {
-  border-color: var(--accent);
-  box-shadow: 0 0 20px rgba(34, 197, 94, 0.15);
+  border-color: color-mix(in srgb, var(--accent) 30%, transparent);
+  box-shadow: 0 0 30px color-mix(in srgb, var(--accent) 15%, transparent);
 }
 
 /* ──────────────────────────────────────

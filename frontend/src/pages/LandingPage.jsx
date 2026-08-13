@@ -42,6 +42,26 @@ const FeatureCard = ({ icon: Icon, title, desc, color }) => (
 );
 
 const LandingPage = () => {
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: {
+                staggerChildren: 0.15,
+                delayChildren: 0.2
+            }
+        }
+    };
+
+    const itemVariants = {
+        hidden: { opacity: 0, y: 20 },
+        visible: { 
+            opacity: 1, 
+            y: 0,
+            transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] }
+        }
+    };
+
     return (
         <div className="min-h-screen bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark font-inter selection:bg-eco-green/30 overflow-x-hidden transition-colors duration-700">
             
@@ -59,7 +79,7 @@ const LandingPage = () => {
                     <Link to="/login" className="text-[11px] font-black uppercase tracking-widest text-text-muted hover:text-eco-green transition-colors hidden sm:block">Log In</Link>
                     <Link to="/register" className="btn-neo px-6 py-2.5 shadow-xl shadow-eco-green/10 text-[11px]">Get Started</Link>
                 </div>
-            </nav>
+            </motion.nav>
 
             <main className="pt-32 pb-24 px-6 md:px-12 max-w-7xl mx-auto space-y-32">
                 
@@ -157,13 +177,13 @@ const LandingPage = () => {
                                     </AreaChart>
                                 </ResponsiveContainer>
                             </div>
-                        </div>
+                        </motion.div>
 
                         {/* Floating depth */}
                         <div className="absolute -top-12 -right-12 w-48 h-48 bg-analytics-blue rounded-full blur-[100px] opacity-20 animate-pulse" />
                         <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-eco-green rounded-full blur-[120px] opacity-15 animate-pulse" />
                     </motion.div>
-                </section>
+                </motion.section>
 
                 {/* Features */}
                 <section className="space-y-20">
@@ -199,7 +219,7 @@ const LandingPage = () => {
                             desc="Direct integration with validated environmental projects to achieve carbon equilibrium." 
                         />
                     </div>
-                </section>
+                </motion.section>
 
                 {/* Big CTA */}
                 <section className="neo-card p-12 md:p-24 relative overflow-hidden bg-eco-green text-white border-none text-center space-y-10 group shadow-[0_50px_100px_-20px_rgba(22,163,74,0.3)]">

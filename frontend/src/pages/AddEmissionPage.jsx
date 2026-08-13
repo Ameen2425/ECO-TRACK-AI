@@ -216,6 +216,22 @@ const AddEmissionPage = () => {
     const setQ = (field, val) => setQData(p => ({ ...p, [field]: val }));
     const setD = (field, val) => setDData(p => ({ ...p, [field]: val }));
 
+    const itemVariants = {
+        hidden: { opacity: 0, y: 20 },
+        visible: { 
+            opacity: 1, 
+            y: 0,
+            transition: { duration: 0.5, ease: "easeOut" }
+        }
+    };
+
+    const cat    = categories[activeIdx];
+    const CatIcon= cat.icon;
+    const isQuick= mode === 'quick';
+
+    const setQ = (field, val) => setQData(p => ({ ...p, [field]: val }));
+    const setD = (field, val) => setDData(p => ({ ...p, [field]: val }));
+
     const handleNext = () => {
         if (activeIdx < categories.length - 1) {
             setActiveIdx(i => i + 1);
@@ -592,10 +608,10 @@ const AddEmissionPage = () => {
                                     <p className={`text-[11px] font-bold ${active ? 'text-text-light dark:text-text-dark' : 'text-text-muted'}`}>{c.name}</p>
                                     {active && <p className="text-[9px] text-eco-green font-black uppercase tracking-widest mt-0.5">Active</p>}
                                 </div>
-                            </button>
+                            </motion.button>
                         );
                     })}
-                </div>
+                </motion.div>
 
                 {/* Main Card */}
                 <div className="lg:col-span-3">

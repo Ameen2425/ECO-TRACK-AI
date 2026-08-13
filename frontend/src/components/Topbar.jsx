@@ -233,7 +233,8 @@ const Topbar = ({ onMenuClick }) => {
                     </AnimatePresence>
                 </div>
             </div>
-        </header>
+        </div>
+    </header>
     );
 };
 
